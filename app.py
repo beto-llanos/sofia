@@ -69,13 +69,39 @@ def extract_numbers(text):
     numbers = re.findall(r'[\$]?\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:pesos?|mxn)?', text.lower())
     return [float(n.replace(',', '')) for n in numbers]
 
+GASTO_PATTERN = re.compile(
+    r'(?:gasté|gaste|compré|compre|pagué|pague|costó|costo|gasta)\s+\$?\s*(\d+(?:,\d{3})*(?:\.\d+)?)\s*(?:pesos?)?\s*(?:en\s+)?([^\n\.]{0,60})',
+    re.IGNORECASE
+)
+
+def classify_gasto(description):
+    d = description.lower()
+    if any(w in d for w in ['super', 'supermercado', 'comida', 'taco', 'tacos', 'restaurante', 'comer', 'almorzar', 'desayun', 'cenar', 'pizza', 'hamburguesa', 'torta']):
+        return "comida"
+    elif any(w in d for w in ['uber', 'taxi', 'camion', 'metro', 'gasolina', 'transporte', 'bus', 'didi']):
+        return "transporte"
+    elif any(w in d for w in ['netflix', 'spotify', 'cine', 'juego', 'hbo', 'disney', 'prime', 'entretenimiento']):
+        return "entretenimiento"
+    elif any(w in d for w in ['claude', 'chatgpt', 'app', 'software', 'hosting', 'dominio', 'tecnologia', 'suscripcion']):
+        return "tecnologia"
+    elif any(w in d for w in ['ropa', 'zapatos', 'camisa', 'pantalon', 'vestido', 'tenis']):
+        return "ropa"
+    elif any(w in d for w in ['gym', 'doctor', 'medicina', 'farmacia', 'salud', 'hospital']):
+        return "salud"
+    elif any(w in d for w in ['perfume', 'capricho', 'lujo', 'gusto', 'regalo']):
+        return "gustos"
+    return "otros"
+
 def update_perfil_and_gastos(user_message, perfil, gastos):
     msg = user_message.lower()
     numbers = extract_numbers(user_message)
 
-    # Detect ingreso
-    if any(w in msg for w in ['gano', 'gana', 'ingreso', 'salario', 'sueldo', 'recibo']) and numbers:
-        perfil["ingreso"] = numbers[0]
+    # Detect ingreso — only if no gasto keyword present in same sentence
+    ingreso_line = next((l for l in msg.splitlines() if any(w in l for w in ['gano', 'gana', 'ingreso', 'salario', 'sueldo', 'recibo'])), None)
+    if ingreso_line:
+        line_nums = extract_numbers(ingreso_line)
+        if line_nums:
+            perfil["ingreso"] = line_nums[0]
 
     # Detect meta
     if any(w in msg for w in ['meta', 'ahorrar', 'quiero tener', 'objetivo']) and numbers:
@@ -95,26 +121,12 @@ def update_perfil_and_gastos(user_message, perfil, gastos):
             if w in msg:
                 perfil["plazo"] = f"en {w}"
 
-    # Detect gastos
-    if any(w in msg for w in ['gasté', 'gaste', 'compré', 'compre', 'pagué', 'pague', 'costó', 'costo']) and numbers:
-        amount = numbers[0]
-
-        if any(w in msg for w in ['super', 'supermercado', 'comida', 'taco', 'tacos', 'restaurante', 'comer', 'almorzar', 'desayun', 'cenar', 'pizza', 'hamburguesa', 'torta']):
-            gastos["comida"] += amount
-        elif any(w in msg for w in ['uber', 'taxi', 'camion', 'metro', 'gasolina', 'transporte', 'bus', 'didi']):
-            gastos["transporte"] += amount
-        elif any(w in msg for w in ['netflix', 'spotify', 'cine', 'juego', 'hbo', 'disney', 'prime', 'entretenimiento']):
-            gastos["entretenimiento"] += amount
-        elif any(w in msg for w in ['claude', 'chatgpt', 'app', 'software', 'hosting', 'dominio', 'tecnologia', 'suscripcion']):
-            gastos["tecnologia"] += amount
-        elif any(w in msg for w in ['ropa', 'zapatos', 'camisa', 'pantalon', 'vestido', 'tenis']):
-            gastos["ropa"] += amount
-        elif any(w in msg for w in ['gym', 'doctor', 'medicina', 'farmacia', 'salud', 'hospital']):
-            gastos["salud"] += amount
-        elif any(w in msg for w in ['perfume', 'capricho', 'lujo', 'gusto', 'regalo']):
-            gastos["gustos"] += amount
-        else:
-            gastos["otros"] += amount
+    # Detect gastos — use regex to find (amount, description) pairs so multiple gastos work
+    matches = GASTO_PATTERN.findall(user_message)
+    for amount_str, description in matches:
+        amount = float(amount_str.replace(',', ''))
+        category = classify_gasto(description)
+        gastos[category] += amount
 
     return perfil, gastos
 
@@ -141,7 +153,8 @@ def calculate_budget_data(perfil, gastos):
         "gustos_pct": pct("gustos") + pct("ropa"),
         "ahorro_pct": ahorro_pct,
         "meta_pct": min(meta_pct, 100),
-        "disponible": round(disponible)
+        "disponible": round(disponible),
+        "ingreso": ingreso
     }
 
 @app.route("/")

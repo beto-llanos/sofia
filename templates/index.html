@@ -135,7 +135,7 @@
   const messagesEl = document.getElementById('messages');
   const inputEl    = document.getElementById('input');
   const sendBtn    = document.getElementById('sendBtn');
-  let ingresoRef   = 0;
+  let ingresoRef   = 0;  // updated from b.ingreso each response
  
   function autoResize(el) {
     el.style.height = 'auto';
@@ -176,8 +176,8 @@
   function updateBudget(b) {
     if (!b) return;
  
-    // Update ingreso reference for disponible bar scaling
-    if (b.disponible > ingresoRef) ingresoRef = b.disponible;
+    // Track ingreso for disponible bar scaling
+    if (b.ingreso && b.ingreso > 0) ingresoRef = b.ingreso;
  
     const items = [
       ['fillComida',    'amtComida',    b.comida_pct],
