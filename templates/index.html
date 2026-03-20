@@ -977,22 +977,28 @@
   // ─── CHAT ──────────────────────────────────────────────────────────
   let ingresoRef = 0;
 
-  function startChat() {
+  async function startChat() {
     document.getElementById('onboarding').style.display = 'none';
     const chatEl = document.getElementById('chat');
     chatEl.classList.add('active');
     hideCats();
 
-    const ingreso = answers.ingreso || 0;
-    ingresoRef = ingreso;
+    ingresoRef = answers.ingreso || 0;
 
-    // Build welcome message
+    const pct = {"relajado":0.10,"equilibrado":0.20,"agresivo":0.35}[answers.estrictez] || 0.20;
+    const ahorroMes = Math.round((answers.ingreso||0) * pct);
+    const meses = ahorroMes > 0 ? Math.round((answers.meta||0) / ahorroMes) : 999;
     const cats = getActiveCats().map(catLabel).join(', ');
-    const meta = answers.meta ? `$${answers.meta.toLocaleString('es-MX')}` : 'una meta';
 
-    addMessage('aldia', `¡Todo listo! 🎉 Aquí está tu plan personalizado:\n\n💰 Ingreso: $${ingreso.toLocaleString('es-MX')}/mes\n🎯 Meta: ${meta}\n📂 Categorías activas: ${cats}\n\nYa puedes registrar tus gastos diciéndome lo que gastaste. Por ejemplo: "gasté 200 en el super" o "pagué 500 de Uber este fin de semana".`);
+    let viabilidad = '';
+    if (answers.meta > 0 && answers.ingreso > 0) {
+      if (meses <= 12) viabilidad = `✅ Tu meta de $${(answers.meta).toLocaleString('es-MX')} es alcanzable en ${meses} meses ahorrando $${ahorroMes.toLocaleString('es-MX')}/mes.`;
+      else if (meses <= 36) viabilidad = `⚡ Tu meta toma ${meses} meses (~${Math.round(meses/12*10)/10} años) ahorrando $${ahorroMes.toLocaleString('es-MX')}/mes. Con disciplina lo logras.`;
+      else viabilidad = `⚠️ Con $${ahorroMes.toLocaleString('es-MX')}/mes de ahorro, tu meta tomaría ${meses} meses. Te sugiero una meta más realista: $${(ahorroMes*12).toLocaleString('es-MX')} en 1 año.`;
+    }
 
-    // Send profile to backend
+    addMessage('aldia', `¡Todo listo! 🎉\n\n${viabilidad}\n\n💰 Ingreso: $${(answers.ingreso||0).toLocaleString('es-MX')}/mes\n📂 Categorías activas: ${cats}\n\nYa puedes registrar tus gastos. Por ejemplo: "gasté 200 en el super".`);
+
     fetch('/api/setup', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
