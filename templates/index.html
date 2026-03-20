@@ -714,13 +714,49 @@
       <button class="ob-cta" id="cta-meta" onclick="obNext()" disabled>Crear mi plan →</button>
     </div>
 
-    <!-- SLIDE 8: Success -->
+
+    <!-- SLIDE 8: Estrictez -->
     <div class="ob-slide" id="slide-8">
+      <span class="ob-emoji">⚖️</span>
+      <div class="ob-question">¿Qué tan estricto quieres tu plan?</div>
+      <div class="ob-sub">Esto define cuánto sacrificas en gustos para alcanzar tu meta más rápido.</div>
+      <div class="ob-options">
+        <div class="ob-option" onclick="selectOption('estrictez', 'relajado', this)">
+          <div class="ob-opt-icon">🌱</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-title">Relajado</div>
+            <div class="ob-opt-desc">Ahorro lo que pueda sin sacrificar mi estilo de vida</div>
+          </div>
+          <div class="ob-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOption('estrictez', 'equilibrado', this)">
+          <div class="ob-opt-icon">⚖️</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-title">Equilibrado</div>
+            <div class="ob-opt-desc">Balance entre disfrutar y ahorrar consistentemente</div>
+          </div>
+          <div class="ob-check"></div>
+        </div>
+        <div class="ob-option" onclick="selectOption('estrictez', 'agresivo', this)">
+          <div class="ob-opt-icon">🔥</div>
+          <div class="ob-opt-text">
+            <div class="ob-opt-title">Agresivo</div>
+            <div class="ob-opt-desc">Maximizo el ahorro aunque sacrifique gustos temporalmente</div>
+          </div>
+          <div class="ob-check"></div>
+        </div>
+      </div>
+      <button class="ob-cta" id="cta-estrictez" onclick="obNext()" disabled>Continuar →</button>
+    </div>
+
+    <!-- SLIDE 9: Success -->
+    <div class="ob-slide" id="slide-9">
       <div class="ob-success">
         <div class="ob-success-icon">🎉</div>
         <h2>¡Tu plan está listo!</h2>
         <p>Creamos un presupuesto personalizado basado en tu situación. Estas son tus categorías activas:</p>
         <div class="ob-tags" id="active-tags"></div>
+        <div id="plan-output" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;font-size:13px;line-height:1.7;color:var(--muted2);text-align:left;max-width:360px;width:100%;margin-top:4px;"></div>
         <button class="ob-cta" style="max-width:320px" onclick="startChat()">Empezar con ALD.IA →</button>
       </div>
     </div>
@@ -822,7 +858,7 @@
 <script>
   // ─── ONBOARDING STATE ──────────────────────────────────────────────
   let currentSlide = 0;
-  const totalSlides = 8;
+  const totalSlides = 9;
   const answers = {};
   const LIMITES_BASE = { vivienda:0.25, comida:0.12, transporte:0.12, salud:0.08, educacion:0.02, ocio:0.07, ropa:0.08, deudas:0.08 };
 
@@ -853,7 +889,7 @@
       ? `Paso ${step} de ${total}` : '';
     document.getElementById('ob-back').disabled = currentSlide === 0;
 
-    if (currentSlide === totalSlides) buildSuccessScreen();
+    if (currentSlide === totalSlides - 1) { buildSuccessScreen(); generatePlan(); }
   }
 
   function selectOption(key, value, el) {
