@@ -363,5 +363,9 @@ Usa emojis, sé directo pero empático. En español casual. Máximo 6 líneas.""
 
     return jsonify({"plan": response.choices[0].message.content.strip()})
 
+@app.route("/ping")
+def ping():
+    return "ok", 200
+
 if __name__ == "__main__":
     app.run(debug=True)
