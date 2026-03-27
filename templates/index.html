@@ -115,7 +115,7 @@
     .quick-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted2);padding:5px 12px;border-radius:99px;font-size:11px;font-weight:600;font-family:var(--font);cursor:pointer;white-space:nowrap;transition:all .15s}
     .quick-btn:hover{border-color:var(--accent);color:var(--text)}
     .input-area{padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
-    .input-area textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 14px;font-size:14px;font-family:var(--font);resize:none;outline:none;max-height:100px;line-height:1.5;transition:border-color .15s}
+    .input-area textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 14px;font-size:16px;font-family:var(--font);resize:none;outline:none;max-height:100px;line-height:1.5;transition:border-color .15s}
     .input-area textarea:focus{border-color:var(--accent)}
     .input-area textarea::placeholder{color:var(--border)}
     .send-btn{width:40px;height:40px;background:var(--accent);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
@@ -283,7 +283,7 @@
         <h2>¡Tu plan está listo!</h2>
         <p>Creamos un presupuesto personalizado basado en tu situación. Estas son tus categorías activas:</p>
         <div class="ob-tags" id="active-tags"></div>
-        <div id="plan-output" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;font-size:13px;line-height:1.7;color:var(--muted2);text-align:left;max-width:360px;width:100%;min-height:50px;"></div>
+        <div id="plan-output" style="background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:16px 18px;font-size:13px;line-height:1.7;color:var(--muted2);text-align:left;max-width:360px;width:100%;min-height:50px;max-height:300px;overflow-y:auto;-height:50px;"></div>
         <button class="ob-cta" style="max-width:320px" onclick="startChat()">Empezar con ALD.IA →</button>
       </div>
     </div>
