@@ -398,5 +398,55 @@ def reset():
 def ping():
     return "ok", 200
 
+@app.route("/api/register", methods=["POST"])
+def register():
+    import bcrypt
+    data = request.json
+    email = data.get("email", "").lower().strip()
+    password = data.get("password", "")
+    if not email or not password:
+        return jsonify({"error": "Email y contraseña requeridos"}), 400
+    if len(password) < 6:
+        return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
+    try:
+        existing = sb.table("usuarios").select("id").eq("email", email).execute()
+        if existing.data:
+            return jsonify({"error": "Este email ya tiene una cuenta"}), 409
+        password_hash = bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
+        session_id = get_session_id()
+        perfil = load_perfil(session_id)
+        perfil["email"] = email
+        perfil["password_hash"] = password_hash
+        perfil["session_id"] = session_id
+        save_perfil(perfil)
+        session["email"] = email
+        return jsonify({"status": "ok", "email": email})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/login", methods=["POST"])
+def login():
+    import bcrypt
+    data = request.json
+    email = data.get("email", "").lower().strip()
+    password = data.get("password", "")
+    try:
+        res = sb.table("usuarios").select("*").eq("email", email).execute()
+        if not res.data:
+            return jsonify({"error": "Email o contraseña incorrectos"}), 401
+        usuario = res.data[0]
+        if not bcrypt.checkpw(password.encode(), usuario["password_hash"].encode()):
+            return jsonify({"error": "Email o contraseña incorrectos"}), 401
+        session["session_id"] = usuario["session_id"]
+        session["email"] = email
+        return jsonify({"status": "ok", "email": email, "onboarding_done": usuario.get("onboarding_done", False)})
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+@app.route("/api/logout", methods=["POST"])
+def logout():
+    session.clear()
+    return jsonify({"status": "ok"})
+
 if __name__ == "__main__":
     app.run(debug=True)

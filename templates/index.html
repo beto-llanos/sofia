@@ -129,8 +129,22 @@
 </head>
 <body>
 
-<div id="onboarding">
-  <div class="ob-header" id="ob-header" style="display:none">
+<div id="auth-screen" style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:20px;text-align:center;">
+  <div style="width:72px;height:72px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:white;margin-bottom:4px;">AL</div>
+  <h1 style="font-size:28px;font-weight:900;">ALD<span style="color:#60a5fa">.IA</span></h1>
+  <p style="font-size:14px;color:#94a3b8;max-width:280px;">Tu asistente financiera diaria. Inicia sesión o crea tu cuenta.</p>
+  <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;">
+    <input type="email" id="auth-email" placeholder="tu@email.com" style="background:#0e1320;border:2px solid #1e2740;border-radius:12px;padding:14px 16px;color:#f1f5f9;font-size:15px;font-family:var(--font);outline:none;width:100%;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#1e2740'">
+    <input type="password" id="auth-password" placeholder="Contraseña (mín. 6 caracteres)" style="background:#0e1320;border:2px solid #1e2740;border-radius:12px;padding:14px 16px;color:#f1f5f9;font-size:15px;font-family:var(--font);outline:none;width:100%;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#1e2740'" onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="auth-error" style="color:#ef4444;font-size:13px;min-height:18px;"></div>
+    <button onclick="doLogin()" style="background:#3b82f6;color:white;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;width:100%;">Iniciar sesión</button>
+    <button onclick="doRegister()" style="background:#141929;color:#94a3b8;border:1px solid #1e2740;border-radius:12px;padding:16px;font-size:15px;font-weight:600;font-family:var(--font);cursor:pointer;width:100%;">Crear cuenta nueva</button>
+    <button onclick="skipAuth()" style="background:none;color:#64748b;border:none;font-size:13px;cursor:pointer;font-family:var(--font);padding:4px;">Continuar sin cuenta</button>
+  </div>
+</div>
+
+<div id="onboarding" style="display:none;flex:1;flex-direction:column;">
+    <div class="ob-header" id="ob-header" style="display:none">
     <button class="ob-back" id="ob-back" onclick="obBack()">←</button>
     <div class="ob-progress-wrap">
       <div class="ob-step-label" id="ob-step-label"></div>
@@ -594,6 +608,53 @@
     sendBtn.disabled = false;
     inputEl.focus();
   }
+
+async function doLogin() {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = '';
+    try {
+      const res = await fetch('/api/login', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({email, password})
+      });
+      const data = await res.json();
+      if (data.error) { errEl.textContent = data.error; return; }
+      document.getElementById('auth-screen').style.display = 'none';
+      if (data.onboarding_done) {
+        document.getElementById('onboarding').style.display = 'none';
+        document.getElementById('chat').classList.add('active');
+        addMessage('aldia', '¡Bienvenido de vuelta! 👋 ¿En qué te ayudo hoy?');
+      } else {
+        document.getElementById('onboarding').style.display = 'flex';
+      }
+    } catch { errEl.textContent = 'Error de conexión.'; }
+  }
+
+  async function doRegister() {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = '';
+    if (!email || !password) { errEl.textContent = 'Ingresa email y contraseña.'; return; }
+    try {
+      const res = await fetch('/api/register', {
+        method: 'POST', headers: {'Content-Type':'application/json'},
+        body: JSON.stringify({email, password})
+      });
+      const data = await res.json();
+      if (data.error) { errEl.textContent = data.error; return; }
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('onboarding').style.display = 'flex';
+    } catch { errEl.textContent = 'Error de conexión.'; }
+  }
+
+  function skipAuth() {
+    document.getElementById('auth-screen').style.display = 'none';
+    document.getElementById('onboarding').style.display = 'flex';
+  }
+
 </script>
 </body>
 </html>
