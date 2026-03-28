@@ -1,3 +1,4 @@
+ï»¿# -*- coding: utf-8 -*-
 from flask import Flask, render_template, request, jsonify, session
 from flask_cors import CORS
 from groq import Groq
@@ -25,7 +26,12 @@ PORCENTAJES_BASE = {
 }
 
 GASTO_PATTERN = re.compile(
-    r'(?:gasté|gaste|compré|compre|pagué|pague|costó|costo|gasto)\s+\$?\s*(\d[\d,\.]*)\s*(?:pesos?|mxn)?\s*(?:en\s+(.{1,60}))?',
+    r'(?:gaste|gaste|compre|compre|pague|pague|costo|costo|gasto)\s+\$?\s*(\d[\d,\.]*)\s*(?:pesos?|mxn)?\s*(?:en\s+(.{1,60}))?',
+    re.IGNORECASE
+)
+
+CADA_PATTERN = re.compile(
+    r'(?:gaste|gaste)\s+\$?(\d[\d,\.]*)\s+en\s+(?:cada|todas)\s+categor',
     re.IGNORECASE
 )
 
@@ -35,7 +41,7 @@ def classify_gasto(desc):
     d = desc.lower()
     if any(w in d for w in ['renta','alquiler','hipoteca','luz','agua','gas','internet','telefono','celular','vivienda']):
         return "vivienda"
-    if any(w in d for w in ['super','supermercado','comida','taco','tacos','restaurante','comer','pizza','hamburguesa','delivery','rappi','uber eats','snack','mercado']):
+    if any(w in d for w in ['super','supermercado','comida','taco','tacos','restaurante','comer','pizza','hamburguesa','delivery','rappi','snack','mercado']):
         return "comida"
     if any(w in d for w in ['uber','taxi','camion','metro','gasolina','transporte','bus','didi','autobus','tren','peaje','estacionamiento']):
         return "transporte"
@@ -52,8 +58,6 @@ def classify_gasto(desc):
     if any(w in d for w in ['ahorro','inversion','fondo','deposito']):
         return "ahorro"
     return "imprevistos"
-
-# --- Supabase helpers --------------------------------------------------------
 
 def get_session_id():
     if "session_id" not in session:
@@ -124,8 +128,6 @@ def save_mensaje(session_id, rol, contenido):
     except Exception as e:
         print(f"Error saving mensaje: {e}")
 
-# --- Core logic --------------------------------------------------------------
-
 def calcular_porcentajes_activos(perfil):
     base = dict(PORCENTAJES_BASE)
     liberado = 0
@@ -162,47 +164,34 @@ def get_system_prompt(perfil, gastos):
     contexto = f"""PERFIL DEL USUARIO:
 - Ingreso mensual: ${ingreso:,.0f} pesos
 - Meta: ${meta:,.0f} pesos en {plazo} meses
-- Gastos registrados: {json.dumps({k:v for k,v in gastos.items() if v > 0}, ensure_ascii=False)}
 - Total gastado: ${total_gastado:,.0f} pesos
 - Disponible real: ${disponible:,.0f} pesos
-- Límites por categoría: {json.dumps(limites, ensure_ascii=False)}
+- Limites por categoria: {json.dumps(limites, ensure_ascii=False)}
 - ALERTAS: {alertas if alertas else 'ninguna'}
-- Día del mes: {dia}""" if ingreso > 0 else "El usuario aún no ha dado su perfil."
+- Dia del mes: {dia}""" if ingreso > 0 else "El usuario aun no ha dado su perfil."
 
-    return f"""Eres ALD.IA (Automatización de Liquidación Diaria con Inteligencia Artificial), asistente financiera personal para jóvenes mexicanos. Hoy es {fecha}, día {dia}.
+    return f"""Eres ALD.IA (Automatizacion de Liquidacion Diaria con Inteligencia Artificial), asistente financiera personal para jovenes mexicanos. Hoy es {fecha}, dia {dia}.
 
 {contexto}
 
 CATEGORIAS: vivienda, comida, transporte, salud, educacion, ocio, ropa, deudas, ahorro, imprevistos.
 
-REGLAS:
-- Español casual y amigable, nunca condescendiente
-- USA SIEMPRE los números del PERFIL — nunca inventes cifras
-- Disponible real: ${disponible:,.0f} — usa ese número exacto
-- Si hay ALERTAS, menciónalas con ?? de forma amigable
-- Si la meta es imposible, dilo con respeto y sugiere alternativa
-- Máximo 4 líneas por respuesta
-- Enseña el porqué de cada consejo financiero
-- Si el usuario pregunta "¿qué pasa si compro X?", "¿puedo comprarme X?", "¿me alcanza para X?" o similar:
-  1. Calcula el impacto exacto: disponible después de la compra
-  2. Di si afecta su meta y cuántos días/semanas se retrasa
-  3. Sugiere una alternativa si no alcanza (ej: ahorrar X semanas primero)
-  4. Termina con una decisión clara: "Sí puedes" o "Te recomiendo esperar"
-  Usa los números reales del perfil, nunca inventes.
-
-FORMATO OBLIGATORIO DE RESPUESTA:
-- M?ximo 2 oraciones
-- Primera oraci?n: confirmaci?n del gasto o acci?n
-- Segunda oraci?n: estado actual o consejo
-- NUNCA expliques c?lculos, solo da resultados
-- NUNCA hagas listas a menos que el usuario las pida
-
 FORMATO OBLIGATORIO:
 - Maximo 2 oraciones cortas
-- NUNCA expliques calculos, solo da el resultado
-- NUNCA hagas listas a menos que el usuario las pida
+- NUNCA expliques calculos ni escribas operaciones como $X - $Y = $Z
+- NUNCA hagas listas de categorias a menos que el usuario las pida
+- Solo da el resultado final
 
-INSTRUCCION CRITICA: Al final de CADA respuesta agrega:
+REGLAS:
+- Espanol casual y amigable, nunca condescendiente
+- USA SIEMPRE los numeros del PERFIL, nunca inventes cifras
+- Disponible real: ${disponible:,.0f} â€” usa ese numero exacto
+- Si hay ALERTAS, mencionalas con emoji de alerta de forma amigable
+- Si la meta es imposible, dilo con respeto y sugiere alternativa
+- Si el usuario pregunta que pasa si compra algo: calcula el impacto real y da recomendacion clara
+- Ensena el porque de cada consejo financiero
+
+INSTRUCCION CRITICA: Al final de CADA respuesta agrega exactamente:
 BUDGET_DATA:{{"vivienda_pct":0,"comida_pct":0,"transporte_pct":0,"salud_pct":0,"educacion_pct":0,"ocio_pct":0,"ropa_pct":0,"deudas_pct":0,"ahorro_pct":0,"meta_pct":0,"disponible":{disponible},"ingreso":{ingreso}}}
 
 Rellena los _pct con (gasto_categoria / ingreso * 100). disponible e ingreso siempre fijos."""
@@ -252,7 +241,8 @@ def calculate_budget_data(perfil, gastos):
         "educacion_pct": pct("educacion"), "ocio_pct": pct("ocio"),
         "ropa_pct": pct("ropa"), "deudas_pct": pct("deudas"),
         "ahorro_pct": ahorro_pct, "meta_pct": min(meta_pct, 100),
-        "disponible": round(disponible), "ingreso": ingreso
+        "disponible": round(disponible),
+        "ingreso": ingreso if ingreso > 0 else perfil.get("ingreso", 0)
     }
 
 def check_alerts(perfil, gastos):
@@ -265,8 +255,6 @@ def check_alerts(perfil, gastos):
         if limite > 0 and gastos.get(cat, 0) >= limite * 0.85:
             return True
     return False
-
-# --- Routes -----------------------------------------------------------------
 
 @app.route("/")
 def index():
@@ -282,23 +270,28 @@ def chat():
     gastos = load_gastos(session_id)
     messages = load_mensajes(session_id)
 
-    # Update perfil from message
     perfil = update_perfil_from_message(user_message, perfil)
 
-    # Detect gastos
+    # Detect "gaste X en cada categoria"
+    cada_match = CADA_PATTERN.search(user_message)
     new_gastos = []
-    for match in GASTO_PATTERN.finditer(user_message):
-        amount_str = match.group(1).replace(',', '')
-        try:
-            amount = float(amount_str)
-        except:
-            continue
-        desc = match.group(2) or ""
-        cat = classify_gasto(desc)
-        gastos[cat] = gastos.get(cat, 0) + amount
-        new_gastos.append((cat, amount, desc))
+    if cada_match:
+        amount = float(cada_match.group(1).replace(',', ''))
+        for cat in ['vivienda','comida','transporte','salud','educacion','ocio','ropa','deudas']:
+            gastos[cat] = gastos.get(cat, 0) + amount
+            new_gastos.append((cat, amount, "cada categoria"))
+    else:
+        for match in GASTO_PATTERN.finditer(user_message):
+            amount_str = match.group(1).replace(',', '')
+            try:
+                amount = float(amount_str)
+            except:
+                continue
+            desc = match.group(2) or ""
+            cat = classify_gasto(desc)
+            gastos[cat] = gastos.get(cat, 0) + amount
+            new_gastos.append((cat, amount, desc))
 
-    # Save to Supabase
     save_perfil(perfil)
     for cat, amount, desc in new_gastos:
         save_gasto(session_id, cat, amount, desc)
@@ -310,7 +303,7 @@ def chat():
         model="llama-3.3-70b-versatile",
         messages=[{"role": "system", "content": get_system_prompt(perfil, gastos)}] + messages[-14:],
         temperature=0.7,
-        max_tokens=600
+        max_tokens=400
     )
 
     full_response = response.choices[0].message.content
@@ -368,23 +361,23 @@ def generar_plan():
     ahorro_necesario = round(meta / plazo) if plazo > 0 else 0
     es_viable = ahorro_necesario <= ahorro_mensual
 
-    prompt = f"""Eres ALD.IA, asistente financiero empático para jóvenes mexicanos.
+    prompt = f"""Eres ALD.IA, asistente financiero empatico para jovenes mexicanos.
 
 Datos del usuario:
 - Ingreso: ${ingreso:,.0f}/mes
 - Meta: ${meta:,.0f} ({meta_tipo}) en {plazo} meses
 - Plan: {estrictez} ({int(pct_ahorro*100)}% de ahorro = ${ahorro_mensual:,.0f}/mes)
 - Necesita ahorrar: ${ahorro_necesario:,.0f}/mes para lograrlo
-- ¿Es viable?: {es_viable}
+- Es viable?: {es_viable}
 
-Genera en máximo 5 líneas:
-1. Si la meta es viable o no (empático si no lo es)
+Genera en maximo 5 lineas:
+1. Si la meta es viable o no (empatico si no lo es)
 2. Si no es viable, sugiere meta alternativa en ese plazo: ${ahorro_mensual*plazo:,.0f}
-3. Cuánto ahorrar al mes y en cuánto tiempo llega a la meta real
-4. Un consejo concreto para su situación
+3. Cuanto ahorrar al mes y en cuanto tiempo llega
+4. Un consejo concreto
 5. Frase motivadora corta
 
-Emojis, español casual, directo."""
+Emojis, espanol casual, directo."""
 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -394,21 +387,60 @@ Emojis, español casual, directo."""
     )
     return jsonify({"plan": response.choices[0].message.content.strip()})
 
-@app.route("/api/reset", methods=["POST"])
-def reset():
+@app.route("/api/budget", methods=["GET"])
+def budget():
     session_id = get_session_id()
-    try:
-        sb.table("mensajes").delete().eq("session_id", session_id).execute()
-        sb.table("gastos").delete().eq("session_id", session_id).execute()
-        sb.table("usuarios").delete().eq("session_id", session_id).execute()
-    except Exception as e:
-        print(f"Error resetting: {e}")
-    session.clear()
-    return jsonify({"status": "ok"})
+    perfil = load_perfil(session_id)
+    gastos = load_gastos(session_id)
+    return jsonify({"budget": calculate_budget_data(perfil, gastos)})
 
-@app.route("/ping")
-def ping():
-    return "ok", 200
+@app.route("/api/resumen", methods=["GET"])
+def resumen():
+    session_id = get_session_id()
+    perfil = load_perfil(session_id)
+    gastos = load_gastos(session_id)
+
+    ingreso = perfil.get("ingreso", 0)
+    if ingreso == 0:
+        return jsonify({"resumen": None})
+
+    total_gastado = sum(gastos.values())
+    disponible = ingreso - total_gastado
+    dia = datetime.now().day
+
+    porcentajes_activos = calcular_porcentajes_activos(perfil)
+    cat_critica = None
+    pct_critico = 0
+    for cat, pct in porcentajes_activos.items():
+        limite = ingreso * pct / 100
+        gastado = gastos.get(cat, 0)
+        if limite > 0:
+            uso = gastado / limite * 100
+            if uso > pct_critico:
+                pct_critico = uso
+                cat_critica = cat
+
+    prompt = f"""Eres ALD.IA, asistente financiera empatica para jovenes mexicanos.
+
+El usuario acaba de abrir la app. Genera un resumen proactivo del mes en maximo 2 oraciones:
+
+Datos:
+- Dia del mes: {dia}
+- Ingreso mensual: ${ingreso:,.0f}
+- Total gastado: ${total_gastado:,.0f}
+- Disponible: ${disponible:,.0f}
+- Categoria mas usada: {cat_critica} ({round(pct_critico)}% de su limite)
+
+El mensaje debe saludar brevemente y dar 1-2 datos clave. Termina con pregunta corta.
+Espanol casual, emojis, maximo 2 oraciones."""
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.7,
+        max_tokens=150
+    )
+    return jsonify({"resumen": response.choices[0].message.content.strip()})
 
 @app.route("/api/register", methods=["POST"])
 def register():
@@ -417,9 +449,11 @@ def register():
     email = data.get("email", "").lower().strip()
     password = data.get("password", "")
     if not email or not password:
-        return jsonify({"error": "Email y contraseña requeridos"}), 400
+        return jsonify({"error": "Email y contrasena requeridos"}), 400
     if len(password) < 6:
-        return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
+        return jsonify({"error": "La contrasena debe tener al menos 6 caracteres"}), 400
+    if not re.match(r'^[^@]+@[^@]+\.[^@]+$', email):
+        return jsonify({"error": "Email invalido"}), 400
     try:
         existing = sb.table("usuarios").select("id").eq("email", email).execute()
         if existing.data:
@@ -445,13 +479,23 @@ def login():
     try:
         res = sb.table("usuarios").select("*").eq("email", email).execute()
         if not res.data:
-            return jsonify({"error": "Email o contraseña incorrectos"}), 401
+            return jsonify({"error": "Email o contrasena incorrectos"}), 401
         usuario = res.data[0]
         if not bcrypt.checkpw(password.encode(), usuario["password_hash"].encode()):
-            return jsonify({"error": "Email o contraseña incorrectos"}), 401
+            return jsonify({"error": "Email o contrasena incorrectos"}), 401
         session["session_id"] = usuario["session_id"]
         session["email"] = email
-        return jsonify({"status": "ok", "email": email, "onboarding_done": usuario.get("onboarding_done", False), "ingreso": usuario.get("ingreso", 0), "meta": usuario.get("meta", 0), "plazo_meses": usuario.get("plazo_meses", 12), "tiene_vivienda": usuario.get("tiene_vivienda", True), "tiene_transporte": usuario.get("tiene_transporte", True), "tiene_deudas": usuario.get("tiene_deudas", True), "tiene_educacion": usuario.get("tiene_educacion", True)})
+        return jsonify({
+            "status": "ok", "email": email,
+            "onboarding_done": usuario.get("onboarding_done", False),
+            "ingreso": usuario.get("ingreso", 0),
+            "meta": usuario.get("meta", 0),
+            "plazo_meses": usuario.get("plazo_meses", 12),
+            "tiene_vivienda": usuario.get("tiene_vivienda", True),
+            "tiene_transporte": usuario.get("tiene_transporte", True),
+            "tiene_deudas": usuario.get("tiene_deudas", True),
+            "tiene_educacion": usuario.get("tiene_educacion", True)
+        })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
@@ -460,75 +504,21 @@ def logout():
     session.clear()
     return jsonify({"status": "ok"})
 
-@app.route("/api/budget", methods=["GET"])
-def budget():
+@app.route("/api/reset", methods=["POST"])
+def reset():
     session_id = get_session_id()
-    perfil = load_perfil(session_id)
-    gastos = load_gastos(session_id)
-    return jsonify({"budget": calculate_budget_data(perfil, gastos)})
+    try:
+        sb.table("mensajes").delete().eq("session_id", session_id).execute()
+        sb.table("gastos").delete().eq("session_id", session_id).execute()
+        sb.table("usuarios").delete().eq("session_id", session_id).execute()
+    except Exception as e:
+        print(f"Error resetting: {e}")
+    session.clear()
+    return jsonify({"status": "ok"})
 
-@app.route("/api/resumen", methods=["GET"])
-def resumen():
-    session_id = get_session_id()
-    perfil = load_perfil(session_id)
-    gastos = load_gastos(session_id)
-    
-    ingreso = perfil.get("ingreso", 0)
-    if ingreso == 0:
-        return jsonify({"resumen": None})
-    
-    total_gastado = sum(gastos.values())
-    disponible = ingreso - total_gastado
-    dia = datetime.now().day
-    
-    # Categoría más gastada
-    porcentajes_activos = calcular_porcentajes_activos(perfil)
-    cat_critica = None
-    pct_critico = 0
-    for cat, pct in porcentajes_activos.items():
-        limite = ingreso * pct / 100
-        gastado = gastos.get(cat, 0)
-        if limite > 0:
-            uso = gastado / limite * 100
-            if uso > pct_critico:
-                pct_critico = uso
-                cat_critica = cat
-    
-    prompt = f"""Eres ALD.IA, asistente financiera empática para jóvenes mexicanos.
-
-El usuario acaba de abrir la app. Genera un resumen proactivo del mes en máximo 3 líneas:
-
-Datos:
-- Día del mes: {dia}
-- Ingreso mensual: ${ingreso:,.0f}
-- Total gastado: ${total_gastado:,.0f}
-- Disponible: ${disponible:,.0f}
-- Categoría más usada: {cat_critica} ({round(pct_critico)}% de su límite)
-- Meta: ${perfil.get('meta', 0):,.0f}
-
-El mensaje debe:
-1. Saludar de vuelta brevemente
-2. Dar 1-2 datos clave del mes en curso
-3. Una observación o consejo corto
-4. Terminar con pregunta corta tipo "¿seguimos?"
-
-Español casual, emojis, máximo 3 líneas."""
-
-    response = client.chat.completions.create(
-        model="llama-3.3-70b-versatile",
-        messages=[{"role": "user", "content": prompt}],
-        temperature=0.7,
-        max_tokens=150
-    )
-    return jsonify({"resumen": response.choices[0].message.content.strip()})
+@app.route("/ping")
+def ping():
+    return "ok", 200
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
-
-
-
-
-
