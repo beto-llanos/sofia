@@ -1,4 +1,4 @@
-from flask import Flask, render_template, request, jsonify, session
+ï»¿from flask import Flask, render_template, request, jsonify, session
 from flask_cors import CORS
 from groq import Groq
 from supabase import create_client
@@ -191,10 +191,15 @@ REGLAS:
   Usa los nÃºmeros reales del perfil, nunca inventes.
 
 FORMATO OBLIGATORIO DE RESPUESTA:
-- Máximo 2 oraciones
-- Primera oración: confirmación del gasto o acción
-- Segunda oración: estado actual o consejo
-- NUNCA expliques cálculos, solo da resultados
+- Mï¿½ximo 2 oraciones
+- Primera oraciï¿½n: confirmaciï¿½n del gasto o acciï¿½n
+- Segunda oraciï¿½n: estado actual o consejo
+- NUNCA expliques cï¿½lculos, solo da resultados
+- NUNCA hagas listas a menos que el usuario las pida
+
+FORMATO OBLIGATORIO:
+- Maximo 2 oraciones cortas
+- NUNCA expliques calculos, solo da el resultado
 - NUNCA hagas listas a menos que el usuario las pida
 
 INSTRUCCION CRITICA: Al final de CADA respuesta agrega:
@@ -519,6 +524,7 @@ EspaÃ±ol casual, emojis, mÃ¡ximo 3 lÃ­neas."""
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
