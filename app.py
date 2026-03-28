@@ -261,9 +261,7 @@ def check_alerts(perfil, gastos):
             return True
     return False
 
-@app.route("/")
-def index():
-    return render_template("index.html")
+@app.route("/")`ndef index():`n    if "email" not in session:`n        session.clear()`n    return render_template("index.html")
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
@@ -527,3 +525,4 @@ def ping():
 
 if __name__ == "__main__":
     app.run(debug=True)
+
