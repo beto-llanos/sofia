@@ -648,6 +648,7 @@ async function doLogin() {
           if (fillD) { fillD.style.width = '100%'; fillD.style.background = 'var(--green)'; }
           if (amtD)  { amtD.textContent = '$' + ingresoRef.toLocaleString('es-MX'); amtD.style.color = 'var(--green)'; }
         }
+        fetch('/api/budget').then(r => r.json()).then(d => { if (d.budget) updateBudget(d.budget); });
         fetch('/api/resumen').then(r => r.json()).then(d => {
           addMessage('aldia', d.resumen || '¡Bienvenido de vuelta! 👋 ¿En qué te ayudo hoy?');
         });
@@ -683,6 +684,7 @@ async function doLogin() {
 </script>
 </body>
 </html>
+
 
 
 
