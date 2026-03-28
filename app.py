@@ -448,6 +448,13 @@ def logout():
     session.clear()
     return jsonify({"status": "ok"})
 
+@app.route("/api/budget", methods=["GET"])
+def budget():
+    session_id = get_session_id()
+    perfil = load_perfil(session_id)
+    gastos = load_gastos(session_id)
+    return jsonify({"budget": calculate_budget_data(perfil, gastos)})
+
 @app.route("/api/resumen", methods=["GET"])
 def resumen():
     session_id = get_session_id()
@@ -505,6 +512,7 @@ Español casual, emojis, máximo 3 líneas."""
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
