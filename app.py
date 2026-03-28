@@ -176,6 +176,11 @@ def get_system_prompt(perfil, gastos):
 
 CATEGORIAS: vivienda, comida, transporte, salud, educacion, ocio, ropa, deudas, ahorro, imprevistos.
 
+EJEMPLOS DE RESPUESTAS CORRECTAS:
+Usuario: "gaste 500 en uber" -> "Transporte registrado: $500. Te quedan $X disponibles este mes."
+Usuario: "gaste 3000 en cada categoria" -> "Listo, $3,000 en cada categoria registrados. Disponible: $X."
+Usuario: "como voy?" -> "Van $X gastados de $Y este mes. Tu categoria mas alta es Z con X%."
+
 FORMATO OBLIGATORIO:
 - Maximo 2 oraciones cortas
 - NUNCA expliques calculos ni escribas operaciones como $X - $Y = $Z
