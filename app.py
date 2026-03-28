@@ -1,4 +1,4 @@
-﻿from flask import Flask, render_template, request, jsonify, session
+from flask import Flask, render_template, request, jsonify, session
 from flask_cors import CORS
 from groq import Groq
 from supabase import create_client
@@ -25,7 +25,7 @@ PORCENTAJES_BASE = {
 }
 
 GASTO_PATTERN = re.compile(
-    r'(?:gasté|gaste|compré|compre|pagué|pague|costó|costo|gasto)\s+\$?\s*(\d[\d,\.]*)\s*(?:pesos?|mxn)?\s*(?:en\s+(.{1,60}))?',
+    r'(?:gast�|gaste|compr�|compre|pagu�|pague|cost�|costo|gasto)\s+\$?\s*(\d[\d,\.]*)\s*(?:pesos?|mxn)?\s*(?:en\s+(.{1,60}))?',
     re.IGNORECASE
 )
 
@@ -53,7 +53,7 @@ def classify_gasto(desc):
         return "ahorro"
     return "imprevistos"
 
-# ─── Supabase helpers ────────────────────────────────────────────────────────
+# --- Supabase helpers --------------------------------------------------------
 
 def get_session_id():
     if "session_id" not in session:
@@ -124,7 +124,7 @@ def save_mensaje(session_id, rol, contenido):
     except Exception as e:
         print(f"Error saving mensaje: {e}")
 
-# ─── Core logic ──────────────────────────────────────────────────────────────
+# --- Core logic --------------------------------------------------------------
 
 def calcular_porcentajes_activos(perfil):
     base = dict(PORCENTAJES_BASE)
@@ -165,36 +165,36 @@ def get_system_prompt(perfil, gastos):
 - Gastos registrados: {json.dumps({k:v for k,v in gastos.items() if v > 0}, ensure_ascii=False)}
 - Total gastado: ${total_gastado:,.0f} pesos
 - Disponible real: ${disponible:,.0f} pesos
-- Límites por categoría: {json.dumps(limites, ensure_ascii=False)}
+- L�mites por categor�a: {json.dumps(limites, ensure_ascii=False)}
 - ALERTAS: {alertas if alertas else 'ninguna'}
-- Día del mes: {dia}""" if ingreso > 0 else "El usuario aún no ha dado su perfil."
+- D�a del mes: {dia}""" if ingreso > 0 else "El usuario a�n no ha dado su perfil."
 
-    return f"""Eres ALD.IA (Automatización de Liquidación Diaria con Inteligencia Artificial), asistente financiera personal para jóvenes mexicanos. Hoy es {fecha}, día {dia}.
+    return f"""Eres ALD.IA (Automatizaci�n de Liquidaci�n Diaria con Inteligencia Artificial), asistente financiera personal para j�venes mexicanos. Hoy es {fecha}, d�a {dia}.
 
 {contexto}
 
 CATEGORIAS: vivienda, comida, transporte, salud, educacion, ocio, ropa, deudas, ahorro, imprevistos.
 
 REGLAS:
-- Español casual y amigable, nunca condescendiente
-- USA SIEMPRE los números del PERFIL — nunca inventes cifras
-- Disponible real: ${disponible:,.0f} — usa ese número exacto
-- Si hay ALERTAS, menciónalas con ⚠️ de forma amigable
+- Espa�ol casual y amigable, nunca condescendiente
+- USA SIEMPRE los n�meros del PERFIL � nunca inventes cifras
+- Disponible real: ${disponible:,.0f} � usa ese n�mero exacto
+- Si hay ALERTAS, menci�nalas con ?? de forma amigable
 - Si la meta es imposible, dilo con respeto y sugiere alternativa
-- Máximo 4 líneas por respuesta
-- Enseña el porqué de cada consejo financiero
-- Si el usuario pregunta "¿qué pasa si compro X?", "¿puedo comprarme X?", "¿me alcanza para X?" o similar:
-  1. Calcula el impacto exacto: disponible después de la compra
-  2. Di si afecta su meta y cuántos días/semanas se retrasa
+- M�ximo 4 l�neas por respuesta
+- Ense�a el porqu� de cada consejo financiero
+- Si el usuario pregunta "�qu� pasa si compro X?", "�puedo comprarme X?", "�me alcanza para X?" o similar:
+  1. Calcula el impacto exacto: disponible despu�s de la compra
+  2. Di si afecta su meta y cu�ntos d�as/semanas se retrasa
   3. Sugiere una alternativa si no alcanza (ej: ahorrar X semanas primero)
-  4. Termina con una decisión clara: "Sí puedes" o "Te recomiendo esperar"
-  Usa los números reales del perfil, nunca inventes.
+  4. Termina con una decisi�n clara: "S� puedes" o "Te recomiendo esperar"
+  Usa los n�meros reales del perfil, nunca inventes.
 
 FORMATO OBLIGATORIO DE RESPUESTA:
-- M�ximo 2 oraciones
-- Primera oraci�n: confirmaci�n del gasto o acci�n
-- Segunda oraci�n: estado actual o consejo
-- NUNCA expliques c�lculos, solo da resultados
+- M?ximo 2 oraciones
+- Primera oraci?n: confirmaci?n del gasto o acci?n
+- Segunda oraci?n: estado actual o consejo
+- NUNCA expliques c?lculos, solo da resultados
 - NUNCA hagas listas a menos que el usuario las pida
 
 FORMATO OBLIGATORIO:
@@ -266,7 +266,7 @@ def check_alerts(perfil, gastos):
             return True
     return False
 
-# ─── Routes ─────────────────────────────────────────────────────────────────
+# --- Routes -----------------------------------------------------------------
 
 @app.route("/")
 def index():
@@ -368,23 +368,23 @@ def generar_plan():
     ahorro_necesario = round(meta / plazo) if plazo > 0 else 0
     es_viable = ahorro_necesario <= ahorro_mensual
 
-    prompt = f"""Eres ALD.IA, asistente financiero empático para jóvenes mexicanos.
+    prompt = f"""Eres ALD.IA, asistente financiero emp�tico para j�venes mexicanos.
 
 Datos del usuario:
 - Ingreso: ${ingreso:,.0f}/mes
 - Meta: ${meta:,.0f} ({meta_tipo}) en {plazo} meses
 - Plan: {estrictez} ({int(pct_ahorro*100)}% de ahorro = ${ahorro_mensual:,.0f}/mes)
 - Necesita ahorrar: ${ahorro_necesario:,.0f}/mes para lograrlo
-- ¿Es viable?: {es_viable}
+- �Es viable?: {es_viable}
 
-Genera en máximo 5 líneas:
-1. Si la meta es viable o no (empático si no lo es)
+Genera en m�ximo 5 l�neas:
+1. Si la meta es viable o no (emp�tico si no lo es)
 2. Si no es viable, sugiere meta alternativa en ese plazo: ${ahorro_mensual*plazo:,.0f}
-3. Cuánto ahorrar al mes y en cuánto tiempo llega a la meta real
-4. Un consejo concreto para su situación
+3. Cu�nto ahorrar al mes y en cu�nto tiempo llega a la meta real
+4. Un consejo concreto para su situaci�n
 5. Frase motivadora corta
 
-Emojis, español casual, directo."""
+Emojis, espa�ol casual, directo."""
 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -417,9 +417,9 @@ def register():
     email = data.get("email", "").lower().strip()
     password = data.get("password", "")
     if not email or not password:
-        return jsonify({"error": "Email y contraseña requeridos"}), 400
+        return jsonify({"error": "Email y contrase�a requeridos"}), 400
     if len(password) < 6:
-        return jsonify({"error": "La contraseña debe tener al menos 6 caracteres"}), 400
+        return jsonify({"error": "La contrase�a debe tener al menos 6 caracteres"}), 400
     try:
         existing = sb.table("usuarios").select("id").eq("email", email).execute()
         if existing.data:
@@ -445,10 +445,10 @@ def login():
     try:
         res = sb.table("usuarios").select("*").eq("email", email).execute()
         if not res.data:
-            return jsonify({"error": "Email o contraseña incorrectos"}), 401
+            return jsonify({"error": "Email o contrase�a incorrectos"}), 401
         usuario = res.data[0]
         if not bcrypt.checkpw(password.encode(), usuario["password_hash"].encode()):
-            return jsonify({"error": "Email o contraseña incorrectos"}), 401
+            return jsonify({"error": "Email o contrase�a incorrectos"}), 401
         session["session_id"] = usuario["session_id"]
         session["email"] = email
         return jsonify({"status": "ok", "email": email, "onboarding_done": usuario.get("onboarding_done", False), "ingreso": usuario.get("ingreso", 0), "meta": usuario.get("meta", 0), "plazo_meses": usuario.get("plazo_meses", 12), "tiene_vivienda": usuario.get("tiene_vivienda", True), "tiene_transporte": usuario.get("tiene_transporte", True), "tiene_deudas": usuario.get("tiene_deudas", True), "tiene_educacion": usuario.get("tiene_educacion", True)})
@@ -481,7 +481,7 @@ def resumen():
     disponible = ingreso - total_gastado
     dia = datetime.now().day
     
-    # Categoría más gastada
+    # Categor�a m�s gastada
     porcentajes_activos = calcular_porcentajes_activos(perfil)
     cat_critica = None
     pct_critico = 0
@@ -494,25 +494,25 @@ def resumen():
                 pct_critico = uso
                 cat_critica = cat
     
-    prompt = f"""Eres ALD.IA, asistente financiera empática para jóvenes mexicanos.
+    prompt = f"""Eres ALD.IA, asistente financiera emp�tica para j�venes mexicanos.
 
-El usuario acaba de abrir la app. Genera un resumen proactivo del mes en máximo 3 líneas:
+El usuario acaba de abrir la app. Genera un resumen proactivo del mes en m�ximo 3 l�neas:
 
 Datos:
-- Día del mes: {dia}
+- D�a del mes: {dia}
 - Ingreso mensual: ${ingreso:,.0f}
 - Total gastado: ${total_gastado:,.0f}
 - Disponible: ${disponible:,.0f}
-- Categoría más usada: {cat_critica} ({round(pct_critico)}% de su límite)
+- Categor�a m�s usada: {cat_critica} ({round(pct_critico)}% de su l�mite)
 - Meta: ${perfil.get('meta', 0):,.0f}
 
 El mensaje debe:
 1. Saludar de vuelta brevemente
 2. Dar 1-2 datos clave del mes en curso
-3. Una observación o consejo corto
-4. Terminar con pregunta corta tipo "¿seguimos?"
+3. Una observaci�n o consejo corto
+4. Terminar con pregunta corta tipo "�seguimos?"
 
-Español casual, emojis, máximo 3 líneas."""
+Espa�ol casual, emojis, m�ximo 3 l�neas."""
 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
@@ -524,6 +524,7 @@ Español casual, emojis, máximo 3 líneas."""
 
 if __name__ == "__main__":
     app.run(debug=True)
+
 
 
 
