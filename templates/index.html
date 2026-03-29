@@ -529,11 +529,6 @@
     });
   }
 
-  function hardReset() {
-    fetch('/api/reset', {method:'POST'});
-    location.reload();
-  }
-
   function autoResize(el) {
     el.style.height = 'auto';
     el.style.height = Math.min(el.scrollHeight, 100) + 'px';
