@@ -382,6 +382,11 @@ def generar_plan():
     pct_ahorro_map = {"relajado": pct_base * 0.5, "equilibrado": pct_base * 0.75, "agresivo": pct_base}
     pct_ahorro = pct_ahorro_map.get(estrictez, pct_base * 0.75) / 100
     pct_ahorro = max(pct_ahorro, 0.05)  # minimo 5%
+    ahorro_disponible = data.get("ahorro_disponible", "mitad")
+    if ahorro_disponible == "todo":
+        pct_ahorro = max(pct_ahorro, pct_base / 100)
+    elif ahorro_disponible == "poco":
+        pct_ahorro = min(pct_ahorro, 0.15)
     ahorro_mensual = round(ingreso * pct_ahorro)
     ahorro_necesario = round(meta / plazo) if plazo > 0 else 0
     es_viable = ahorro_necesario <= ahorro_mensual
