@@ -279,6 +279,7 @@ def chat():
 
     perfil = update_perfil_from_message(user_message, perfil)
 
+    new_gastos = []
     # Detect multiple gastos: "gaste X en A y Y en B"
     multi_matches = re.findall(r'(\d[\d,\.]*)\s+en\s+([\w\s]{2,25}?)(?=\s+y\s+\d|\s*$|\s*,)', user_message, re.IGNORECASE)
     if len(multi_matches) > 1:
@@ -293,7 +294,6 @@ def chat():
 
     # Detect "gaste X en cada categoria"
     cada_match = CADA_PATTERN.search(user_message)
-    new_gastos = []
     if cada_match:
         amount = float(cada_match.group(1).replace(',', ''))
         for cat in ['vivienda','comida','transporte','salud','educacion','ocio','ropa','deudas']:
