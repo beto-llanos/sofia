@@ -129,6 +129,19 @@
 </head>
 <body>
 
+<div id="auth-screen" style="display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;padding:32px 24px;gap:20px;text-align:center;">
+  <div style="width:72px;height:72px;background:linear-gradient(135deg,#1d4ed8,#3b82f6);border-radius:20px;display:flex;align-items:center;justify-content:center;font-size:24px;font-weight:900;color:white;margin-bottom:4px;">AL</div>
+  <h1 style="font-size:28px;font-weight:900;">ALD<span style="color:#60a5fa">.IA</span></h1>
+  <p style="font-size:16px;color:#94a3b8;max-width:280px;">Tu asistente financiera diaria. Inicia sesion o crea tu cuenta.</p>
+  <div style="width:100%;max-width:320px;display:flex;flex-direction:column;gap:10px;">
+    <input type="email" id="auth-email" placeholder="tu@email.com" style="background:#0e1320;border:2px solid #1e2740;border-radius:12px;padding:14px 16px;color:#f1f5f9;font-size:16px;font-family:var(--font);outline:none;width:100%;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#1e2740'">
+    <input type="password" id="auth-password" placeholder="Contrasena (min. 6 caracteres)" style="background:#0e1320;border:2px solid #1e2740;border-radius:12px;padding:14px 16px;color:#f1f5f9;font-size:16px;font-family:var(--font);outline:none;width:100%;" onfocus="this.style.borderColor='#3b82f6'" onblur="this.style.borderColor='#1e2740'" onkeydown="if(event.key==='Enter')doLogin()">
+    <div id="auth-error" style="color:#ef4444;font-size:13px;min-height:18px;"></div>
+    <button onclick="doLogin()" style="background:#3b82f6;color:white;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;width:100%;">Iniciar sesion</button>
+    <button onclick="doRegister()" style="background:#141929;color:#94a3b8;border:1px solid #1e2740;border-radius:12px;padding:16px;font-size:15px;font-weight:600;font-family:var(--font);cursor:pointer;width:100%;">Crear cuenta nueva</button>
+  </div>
+</div>
+
 <div id="onboarding" style="display:none;flex:1;flex-direction:column;">
   <div class="ob-header" id="ob-header" style="display:none">
     <button class="ob-back" id="ob-back" onclick="obBack()">←</button>
@@ -622,8 +635,54 @@
     sendBtn.disabled = false;
     inputEl.focus();
   }
+  async function doLogin() {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = '';
+    try {
+      const res = await fetch('/api/login', {method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+      const data = await res.json();
+      if (data.error) { errEl.textContent = data.error; return; }
+      document.getElementById('auth-screen').style.display = 'none';
+      if (data.onboarding_done) {
+        if (data.ingreso) answers.ingreso = data.ingreso;
+        if (data.meta) answers.meta = data.meta;
+        if (data.plazo_meses) answers.plazo_meses = data.plazo_meses;
+        answers.vivienda = data.tiene_vivienda;
+        answers.transporte = data.tiene_transporte;
+        answers.deudas = data.tiene_deudas;
+        answers.educacion = data.tiene_educacion;
+        document.getElementById('chat').classList.add('active');
+        hideCats();
+        ingresoRef = answers.ingreso || 0;
+        setTimeout(() => { fetch('/api/budget').then(r=>r.json()).then(d=>{ if(d.budget) updateBudget(d.budget); }); }, 300);
+        fetch('/api/resumen').then(r=>r.json()).then(d=>{ addMessage('aldia', d.resumen || 'Bienvenido de vuelta!'); });
+      } else {
+        document.getElementById('onboarding').style.display = 'flex';
+      }
+    } catch { errEl.textContent = 'Error de conexion.'; }
+  }
+  async function doRegister() {
+    const email = document.getElementById('auth-email').value.trim();
+    const password = document.getElementById('auth-password').value;
+    const errEl = document.getElementById('auth-error');
+    errEl.textContent = '';
+    if (!email || !password) { errEl.textContent = 'Ingresa email y contrasena.'; return; }
+    try {
+      const res = await fetch('/api/register',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({email,password})});
+      const data = await res.json();
+      if (data.error) { errEl.textContent = data.error; return; }
+      document.getElementById('auth-screen').style.display = 'none';
+      document.getElementById('onboarding').style.display = 'flex';
+    } catch { errEl.textContent = 'Error de conexion.'; }
+  }
+  function hardReset() { fetch('/api/reset',{method:'POST'}); location.reload(); }
+  async function resetData() { await fetch('/api/reset-data',{method:'POST'}); location.reload(); }
 </script>
 </body>
 </html>
+
+
 
 
