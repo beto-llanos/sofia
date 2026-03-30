@@ -240,12 +240,79 @@ def calcular_porcentajes_activos(perfil):
             base[cat] = pct
     return base
 
+def evaluar_perfil_inversor(perfil, gastos):
+    """Detecta si el usuario tiene perfil de inversor y actualiza el campo."""
+    ingreso = perfil.get("ingreso", 0)
+    if ingreso == 0:
+        return False
+    total_gastado = sum(gastos.values())
+    disponible = ingreso - total_gastado
+    pct_disponible = disponible / ingreso
+    # Criterios: ingreso > 10k, disponible > 40%, onboarding hecho
+    es_inversor = (
+        ingreso >= 10000 and
+        pct_disponible >= 0.40 and
+        perfil.get("onboarding_done", False)
+    )
+    return es_inversor
+
+def generar_recomendaciones(perfil, gastos):
+    """Genera recomendaciones de productos financieros reales según el perfil."""
+    ingreso = perfil.get("ingreso", 0)
+    if ingreso == 0:
+        return ""
+    total_gastado = sum(gastos.values())
+    disponible = ingreso - total_gastado
+    pct_disp = disponible / ingreso
+    deudas = gastos.get("deudas", 0)
+    ahorro = gastos.get("ahorro", 0)
+    es_inversor = perfil.get("perfil_inversor", False)
+    recomendaciones = []
+
+    # Banco Azteca siempre primero (track del hackathon)
+    if pct_disp >= 0.30:
+        recomendaciones.append(
+            "💙 BANCO AZTECA — Guardadito Digital: sin comisiones, retiro en cualquier Elektra. "
+            "Ideal para empezar tu fondo de emergencia con lo que te sobra este mes."
+        )
+    if pct_disp >= 0.30:
+        recomendaciones.append(
+            "🟣 Nu Cuenta: rendimiento 15% anual sin monto mínimo. "
+            f"Si depositas ${round(disponible*0.5):,}/mes, en un año tienes ~${round(disponible*0.5*12*1.15):,}."
+        )
+        recomendaciones.append(
+            "🟡 CETES Directo (gobierno federal): 11% anual garantizado. "
+            "Desde $100 pesos, sin riesgo. Lo ideal para tu meta de ahorro."
+        )
+        recomendaciones.append(
+            "🟢 Mercado Pago Cuenta: 15% anual, dinero disponible al instante. "
+            "Perfecto si ya usas Mercado Libre."
+        )
+    if deudas > ingreso * 0.15:
+        recomendaciones.append(
+            "⚠️ Tus deudas están por encima del 15% de tu ingreso. "
+            "Considera consolidarlas en un crédito personal a menor tasa — pregúntame cómo."
+        )
+    if ahorro < ingreso * 0.10:
+        recomendaciones.append(
+            "🤖 Tip de automatización: programa una transferencia automática el día de quincena. "
+            "Aunque sea $500, el hábito vale más que el monto."
+        )
+    if es_inversor:
+        recomendaciones.append(
+            "📈 Con tu perfil podrías explorar: GBM+ (fondos indexados desde $100), "
+            "CETES a 28 días para liquidez, o FIBRAS para exposición a bienes raíces sin comprar un depa."
+        )
+    return "\n".join(recomendaciones) if recomendaciones else ""
+
 def get_system_prompt(perfil, gastos):
     now = datetime.now()
     fecha = now.strftime("%B %Y")
     dia = now.day
     dias_mes = calendar.monthrange(now.year, now.month)[1]
     dias_restantes = dias_mes - dia
+    nombre = perfil.get("nombre", "")
+    nombre_str = f" ({nombre})" if nombre else ""
     ingreso = perfil.get("ingreso", 0)
     meta = perfil.get("meta", 0)
     plazo = perfil.get("plazo_meses", 12)
@@ -274,7 +341,11 @@ def get_system_prompt(perfil, gastos):
             if gastado >= limite * 0.85:
                 alertas.append(f"{cat}: {round(uso)}% usado")
 
-    contexto = f"""PERFIL DEL USUARIO:
+    recomendaciones = generar_recomendaciones(perfil, gastos) if ingreso > 0 else ""
+    es_inversor = evaluar_perfil_inversor(perfil, gastos)
+    tono_inversor = "\n- Este usuario tiene PERFIL DE INVERSOR. Habla de instrumentos financieros más sofisticados: fondos indexados, CETES directo, GBM+, FIBRAS. Usa lenguaje más técnico pero accesible." if es_inversor else ""
+
+    contexto = f"""PERFIL DEL USUARIO{nombre_str}:
 - Ingreso mensual: ${ingreso:,.0f} pesos
 - Meta: ${meta:,.0f} pesos en {plazo} meses
 - Total gastado este mes: ${total_gastado:,.0f} pesos
@@ -285,11 +356,15 @@ def get_system_prompt(perfil, gastos):
 - Ritmo: {'✅ bien encaminado' if en_buen_ritmo else '⚠️ gastando mas de lo que entra'}
 - Categoria mas presionada: {cat_top} ({round(top_uso)}% de su limite)
 - Limites por categoria: {json.dumps(limites, ensure_ascii=False)}
-- ALERTAS: {alertas if alertas else 'ninguna'}""" if ingreso > 0 else "El usuario aun no ha dado su perfil."
+- ALERTAS: {alertas if alertas else 'ninguna'}
+- Perfil inversor: {'SÍ' if es_inversor else 'no'}""" if ingreso > 0 else "El usuario aun no ha dado su perfil."
 
+    recomendaciones_str = f"\n\nRECOMENDACIONES FINANCIERAS ACTIVAS (menciona 1-2 cuando sea relevante, siempre con Banco Azteca primero):\n{recomendaciones}" if recomendaciones else ""
+
+    nombre_directive = f"- El usuario se llama {nombre}. Llámalo por su nombre de vez en cuando (no en cada mensaje, solo cuando sea natural).\n" if nombre else ""
     return f"""Eres ALD.IA, asistente financiera personal para jovenes mexicanos. Hoy es {fecha}, dia {dia}.
 
-{contexto}
+{contexto}{recomendaciones_str}
 
 CATEGORIAS: vivienda, comida, transporte, salud, educacion, ocio, ropa, deudas, ahorro, imprevistos.
 
@@ -306,12 +381,12 @@ FORMATO OBLIGATORIO:
 - Solo da el resultado final y una recomendacion concreta
 
 REGLAS:
-- Espanol casual mexicano, nunca condescendiente (usa "oye", "va", "chido", "sale")
+{nombre_directive}- Espanol casual mexicano, nunca condescendiente (usa "oye", "va", "chido", "sale")
 - USA SIEMPRE los numeros del PERFIL, nunca inventes cifras
 - Si hay ALERTAS activas, mencionalas con urgencia amigable
 - Si el ritmo de gasto proyecta sobrepasar el ingreso, advertir con tono de aliado
 - Si la meta es imposible con el ritmo actual, decirlo con alternativa concreta
-- Cuando registres un gasto, siempre confirma categoria + disponible restante
+- Cuando registres un gasto, siempre confirma categoria + disponible restante{tono_inversor}
 
 INSTRUCCION CRITICA: Al final de CADA respuesta agrega exactamente esto (con los numeros reales):
 BUDGET_DATA:{{"vivienda_pct":0,"comida_pct":0,"transporte_pct":0,"salud_pct":0,"educacion_pct":0,"ocio_pct":0,"ropa_pct":0,"deudas_pct":0,"ahorro_pct":0,"meta_pct":0,"disponible":{disponible},"ingreso":{ingreso}}}
@@ -443,6 +518,10 @@ def chat():
                 gastos[cat] = gastos.get(cat, 0) + amount
                 new_gastos.append((cat, amount, desc))
 
+    # Evaluar y persistir perfil inversor si cambió
+    es_inversor_ahora = evaluar_perfil_inversor(perfil, gastos)
+    if perfil.get("perfil_inversor") != es_inversor_ahora:
+        perfil["perfil_inversor"] = es_inversor_ahora
     save_perfil(perfil)
     for cat, amount, desc in new_gastos:
         save_gasto(session_id, cat, amount, desc)
@@ -488,6 +567,8 @@ def setup():
     if data.get("estrictez"):
         perfil["estrictez"] = data["estrictez"]
 
+    if data.get("nombre"):
+        perfil["nombre"] = data["nombre"].strip()
     perfil["tiene_vivienda"]   = data.get("vivienda", True) is not False
     perfil["tiene_transporte"] = data.get("transporte", True) is not False
     perfil["tiene_deudas"]     = data.get("deudas", True) is not False
@@ -682,7 +763,8 @@ def login():
             "tiene_vivienda": usuario.get("tiene_vivienda", True),
             "tiene_transporte": usuario.get("tiene_transporte", True),
             "tiene_deudas": usuario.get("tiene_deudas", True),
-            "tiene_educacion": usuario.get("tiene_educacion", True)
+            "tiene_educacion": usuario.get("tiene_educacion", True),
+            "nombre": usuario.get("nombre", "")
         })
     except Exception as e:
         return jsonify({"error": str(e)}), 500
@@ -704,6 +786,7 @@ def check_session():
         "tiene_transporte": perfil.get("tiene_transporte", True),
         "tiene_deudas": perfil.get("tiene_deudas", True),
         "tiene_educacion": perfil.get("tiene_educacion", True),
+        "nombre": perfil.get("nombre", ""),
     })
 
 @app.route("/api/logout", methods=["POST"])
@@ -907,6 +990,238 @@ def puede_pagar():
             f"✅ Sí puedes. Te quedarán ${disponible_real - monto:,.0f} libres." if puede
             else f"⚠️ Cuidado. Solo tienes ${disponible_real:,.0f} disponibles sin tocar tu meta."
         )
+    })
+
+
+@app.route("/api/historial", methods=["GET"])
+def historial():
+    """Últimas 15 transacciones individuales para mostrar en el chat."""
+    session_id = get_session_id()
+    try:
+        res = sb.table("gastos").select("categoria,monto,descripcion,created_at") \
+               .eq("session_id", session_id) \
+               .order("created_at", desc=True) \
+               .limit(15).execute()
+        rows = []
+        for r in (res.data or []):
+            fecha = r.get("created_at", "")[:10]
+            rows.append({
+                "fecha": fecha,
+                "categoria": r["categoria"],
+                "monto": r["monto"],
+                "descripcion": r.get("descripcion", ""),
+            })
+        return jsonify({"transacciones": rows})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+@app.route("/api/alertas-detalle", methods=["GET"])
+def alertas_detalle():
+    """Alertas inteligentes con consejo accionable concreto."""
+    session_id = get_session_id()
+    perfil = load_perfil(session_id)
+    gastos = load_gastos(session_id)
+    ingreso = perfil.get("ingreso", 0)
+    if ingreso == 0:
+        return jsonify({"alertas": []})
+
+    porcentajes_activos = calcular_porcentajes_activos(perfil)
+    alertas = []
+
+    consejos = {
+        "comida": "Cocina en casa 2-3 días esta semana — ahorras ~${ahorro} pesos.",
+        "ocio": "Revisa tus suscripciones activas. Cancelar una te da ${ahorro} extra.",
+        "ropa": "Pausa compras de moda este mes y ahorra ${ahorro} para tu meta.",
+        "transporte": "Comparte gasolin con alguien o usa transporte público 2 días: ~${ahorro} menos.",
+        "deudas": "Paga más del mínimo para reducir intereses — cada peso extra cuenta.",
+        "salud": "Checa si tu gym tiene plan económico o busca opciones gratuitas al aire libre.",
+        "vivienda": "Tu vivienda está al tope. Considera si puedes negociar o buscar alternativas.",
+        "educacion": "Evalúa si todos los cursos activos te están dando retorno real.",
+    }
+
+    now = datetime.now()
+    dia = now.day
+    dias_mes = calendar.monthrange(now.year, now.month)[1]
+    dias_restantes = dias_mes - dia
+
+    for cat, pct_asignado in porcentajes_activos.items():
+        if cat in ("ahorro", "imprevistos"):
+            continue
+        limite = ingreso * pct_asignado / 100
+        if limite <= 0:
+            continue
+        gastado = gastos.get(cat, 0)
+        uso_pct = round(gastado / limite * 100)
+        if uso_pct >= 70:
+            sobrante = max(0, limite - gastado)
+            exceso = max(0, gastado - limite)
+            # Cuánto se puede ahorrar si se reduce al 85% del límite
+            ahorro_posible = round(gastado - limite * 0.8)
+            estado = "rojo" if uso_pct >= 90 else "amarillo"
+            consejo_template = consejos.get(cat, "Intenta reducir ${ahorro} en esta categoría.")
+            consejo = consejo_template.replace("${ahorro}", f"${ahorro_posible:,}")
+            alertas.append({
+                "categoria": cat,
+                "estado": estado,
+                "uso_pct": uso_pct,
+                "gastado": round(gastado),
+                "limite": round(limite),
+                "sobrante": round(sobrante),
+                "exceso": round(exceso),
+                "consejo": consejo,
+                "dias_restantes": dias_restantes,
+            })
+
+    alertas.sort(key=lambda x: x["uso_pct"], reverse=True)
+    return jsonify({"alertas": alertas, "dia": dia, "dias_mes": dias_mes})
+
+
+@app.route("/api/grafica-mes", methods=["GET"])
+def grafica_mes():
+    """SVG de barras del gasto mensual por categoría."""
+    session_id = get_session_id()
+    perfil = load_perfil(session_id)
+    gastos = load_gastos(session_id)
+    ingreso = perfil.get("ingreso", 0)
+    if ingreso == 0:
+        return jsonify({"error": "sin perfil"})
+
+    porcentajes_activos = calcular_porcentajes_activos(perfil)
+    cats = [c for c in porcentajes_activos if c not in ("imprevistos",) and porcentajes_activos[c] > 0]
+
+    bar_h = 22
+    gap = 8
+    label_w = 90
+    bar_max_w = 200
+    total_h = (bar_h + gap) * len(cats) + 10
+    svg_w = label_w + bar_max_w + 60
+
+    rows = []
+    for i, cat in enumerate(cats):
+        limite = ingreso * porcentajes_activos[cat] / 100
+        gastado = gastos.get(cat, 0)
+        pct = min(gastado / limite, 1.0) if limite > 0 else 0
+        bar_w = round(pct * bar_max_w)
+        y = i * (bar_h + gap) + 5
+        color = "#ef4444" if pct >= 0.90 else "#f59e0b" if pct >= 0.70 else "#10b981"
+        pct_label = f"{round(pct*100)}%"
+        rows.append(
+            f'<text x="{label_w - 6}" y="{y + bar_h - 6}" fill="#9ca3af" font-size="11" text-anchor="end">{cat}</text>'
+            f'<rect x="{label_w}" y="{y}" width="{bar_max_w}" height="{bar_h}" rx="4" fill="#1f2937"/>'
+            f'<rect x="{label_w}" y="{y}" width="{max(bar_w, 2)}" height="{bar_h}" rx="4" fill="{color}"/>'
+            f'<text x="{label_w + bar_max_w + 6}" y="{y + bar_h - 6}" fill="{color}" font-size="11">{pct_label}</text>'
+        )
+
+    svg = (
+        f'<svg xmlns="http://www.w3.org/2000/svg" width="{svg_w}" height="{total_h}" '
+        f'style="background:#111827;border-radius:8px;padding:4px">'
+        + "\n".join(rows) +
+        f'</svg>'
+    )
+    return jsonify({"svg": svg})
+
+
+@app.route("/api/importar-estado", methods=["POST"])
+def importar_estado():
+    """Importa CSV con movimientos bancarios y clasifica automáticamente."""
+    import csv, io
+    session_id = get_session_id()
+    if "archivo" not in request.files:
+        return jsonify({"error": "No se recibió archivo"}), 400
+
+    archivo = request.files["archivo"]
+    nombre = archivo.filename.lower()
+    transacciones = []
+
+    try:
+        if nombre.endswith(".csv"):
+            content = archivo.read().decode("utf-8-sig", errors="replace")
+            reader = csv.reader(io.StringIO(content))
+            rows = list(reader)
+            # Detectar columna de monto y descripción heurísticamente
+            for row in rows[1:]:  # skip header
+                if not row:
+                    continue
+                # Buscar primer número > 0
+                monto = None
+                desc = ""
+                for cell in row:
+                    cell_clean = cell.strip().replace(",", "").replace("$", "")
+                    try:
+                        val = float(cell_clean)
+                        if val > 0 and monto is None:
+                            monto = val
+                    except:
+                        if len(cell.strip()) > 2:
+                            desc = cell.strip()
+                if monto and monto > 0:
+                    cat = classify_gasto(desc.lower())
+                    transacciones.append({"monto": monto, "desc": desc, "cat": cat})
+
+        elif nombre.endswith(".pdf"):
+            try:
+                import pdfplumber
+                pdf_bytes = archivo.read()
+                with pdfplumber.open(io.BytesIO(pdf_bytes)) as pdf:
+                    text = "\n".join(p.extract_text() or "" for p in pdf.pages)
+                # Buscar patrones de monto en el texto
+                patron = re.compile(r'([A-Za-záéíóúÁÉÍÓÚñÑ\s]{3,40})\s+\$?([\d,]+\.?\d{0,2})')
+                for m in patron.finditer(text):
+                    desc = m.group(1).strip()
+                    try:
+                        monto = float(m.group(2).replace(",", ""))
+                        if monto > 0:
+                            cat = classify_gasto(desc.lower())
+                            transacciones.append({"monto": monto, "desc": desc, "cat": cat})
+                    except:
+                        pass
+            except ImportError:
+                return jsonify({"error": "PDF no soportado. Usa CSV por favor."}), 400
+        else:
+            return jsonify({"error": "Solo se aceptan archivos .csv o .pdf"}), 400
+
+    except Exception as e:
+        return jsonify({"error": f"Error procesando archivo: {str(e)}"}), 500
+
+    if not transacciones:
+        return jsonify({"error": "No se encontraron transacciones en el archivo"}), 400
+
+    # Guardar en DB y acumular totales
+    totales = {}
+    for t in transacciones:
+        save_gasto(session_id, t["cat"], t["monto"], t["desc"])
+        totales[t["cat"]] = totales.get(t["cat"], 0) + t["monto"]
+
+    return jsonify({
+        "importadas": len(transacciones),
+        "totales": totales,
+        "mensaje": f"✅ {len(transacciones)} movimientos importados y clasificados."
+    })
+
+
+@app.route("/api/conectar-banco", methods=["POST"])
+def conectar_banco():
+    """Simula conexión OAuth con banco. Devuelve éxito tras simular latencia."""
+    data = request.json or {}
+    banco = data.get("banco", "Banco Azteca")
+    session_id = get_session_id()
+    perfil = load_perfil(session_id)
+
+    # Marcar banco como conectado en perfil
+    perfil["banco_conectado"] = banco
+    save_perfil(perfil)
+
+    return jsonify({
+        "status": "conectado",
+        "banco": banco,
+        "mensaje": f"✅ {banco} conectado exitosamente. Tus movimientos están sincronizados.",
+        "cuentas": [
+            {"tipo": "Débito", "numero": "****3421", "saldo": 8240},
+            {"tipo": "Crédito", "numero": "****7890", "limite": 20000, "usado": 4500},
+        ] if banco == "Banco Azteca" else [
+            {"tipo": "Cuenta", "numero": "****0001", "saldo": 5000}
+        ]
     })
 
 
