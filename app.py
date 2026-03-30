@@ -234,10 +234,11 @@ def calcular_porcentajes_activos(perfil):
     if liberado > 0:
         base["ahorro"] = base.get("ahorro", 15) + liberado
     # Aplicar límites personalizados del usuario
-    limites_custom = perfil.get("limites_custom", {})
-    for cat, pct in limites_custom.items():
-        if cat in base:
-            base[cat] = pct
+    limites_custom = perfil.get("limites_custom") or {}
+    if isinstance(limites_custom, dict):
+        for cat, pct in limites_custom.items():
+            if cat in base:
+                base[cat] = pct
     return base
 
 def evaluar_perfil_inversor(perfil, gastos):
@@ -485,7 +486,7 @@ def chat():
         cat = CAT_ALIASES.get(cat_raw, cat_raw)
         nuevo_monto = float(limite_match.group(2).replace(',', ''))
         nuevo_pct = round((nuevo_monto / perfil["ingreso"]) * 100, 1)
-        limites_custom = perfil.get("limites_custom", {})
+        limites_custom = perfil.get("limites_custom") or {}
         limites_custom[cat] = nuevo_pct
         perfil["limites_custom"] = limites_custom
 

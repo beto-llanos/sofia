@@ -1190,20 +1190,31 @@
   }
 
   // ── Conectar banco ────────────────────────────────────────────────────────
+  let _oauthConnecting = false;
+
   function abrirConectarBanco() {
+    _oauthConnecting = false;
     document.getElementById('modal-banco').style.display = 'flex';
     document.getElementById('banco-grid').style.display = 'grid';
     document.getElementById('oauth-loader').style.display = 'none';
     document.getElementById('oauth-success').style.display = 'none';
+    document.getElementById('oauth-cuentas').innerHTML = '';
     document.getElementById('banco-close-btn').textContent = 'Cancelar';
     document.getElementById('banco-sub').textContent = 'Elige tu banco para sincronizar tus movimientos automáticamente';
+    // Re-enable all banco buttons
+    document.querySelectorAll('.banco-btn').forEach(b => b.disabled = false);
   }
 
   function cerrarBanco() {
+    _oauthConnecting = false;
     document.getElementById('modal-banco').style.display = 'none';
   }
 
   function iniciarOAuth(banco) {
+    if (_oauthConnecting) return;   // guard against double-click / multiple banks
+    _oauthConnecting = true;
+    // Disable all banco buttons immediately so only one bank fires
+    document.querySelectorAll('.banco-btn').forEach(b => b.disabled = true);
     document.getElementById('banco-grid').style.display = 'none';
     document.getElementById('oauth-success').style.display = 'none';
     const loader = document.getElementById('oauth-loader');
@@ -1232,6 +1243,7 @@
         // Mensaje en el chat
         addMessage('aldia', `🏦 ${banco} conectado. ${data.mensaje}\n\nYa puedo ver tus movimientos y darte consejos más precisos.`);
       }).catch(() => {
+        _oauthConnecting = false;
         loader.style.display = 'none';
         addMessage('aldia', 'Error al conectar el banco. Intenta de nuevo.');
         cerrarBanco();
