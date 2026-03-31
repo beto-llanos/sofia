@@ -132,22 +132,41 @@
     ::-webkit-scrollbar-track{background:transparent}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
 
-    /* Health Score Panel */
-    .health-panel{background:var(--surface);border-bottom:1px solid var(--border);padding:10px 16px;display:flex;align-items:center;gap:12px;flex-shrink:0}
-    .score-ring{position:relative;width:48px;height:48px;flex-shrink:0}
-    .score-ring svg{width:48px;height:48px;transform:rotate(-90deg)}
+    /* Health Score Panel — compact bar (tap to expand) */
+    .health-panel{background:var(--surface);border-bottom:1px solid var(--border);padding:0 16px;height:54px;display:flex;align-items:center;gap:12px;flex-shrink:0;cursor:pointer;-webkit-tap-highlight-color:transparent;transition:background .15s}
+    .health-panel:active{background:var(--surface2)}
+    .score-ring{position:relative;width:38px;height:38px;flex-shrink:0}
+    .score-ring svg{width:38px;height:38px;transform:rotate(-90deg)}
     .score-ring circle{fill:none;stroke-width:4;stroke-linecap:round}
     .score-ring .track{stroke:var(--surface2)}
     .score-ring .fill{stroke:var(--accent);stroke-dasharray:138;stroke-dashoffset:138;transition:stroke-dashoffset 1s cubic-bezier(.4,0,.2,1)}
-    .score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:900;color:var(--text)}
+    .score-num{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:var(--text)}
     .score-info{flex:1;min-width:0}
-    .score-nivel{font-size:12px;font-weight:700;color:var(--accent2)}
-    .score-personalidad{font-size:11px;color:var(--muted2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-    .score-bars{display:flex;gap:3px;margin-top:4px}
-    .score-bar-item{flex:1;height:3px;border-radius:99px;background:var(--surface2);overflow:hidden}
+    .score-nivel{font-size:12px;font-weight:700;color:var(--accent2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .score-personalidad{font-size:10px;color:var(--muted);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+    .score-bars{display:flex;gap:3px;margin-top:3px}
+    .score-bar-item{flex:1;height:2px;border-radius:99px;background:var(--surface2);overflow:hidden}
     .score-bar-fill{height:100%;border-radius:99px;transition:width .8s cubic-bezier(.4,0,.2,1)}
-    .tip-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:10px;padding:7px 10px;font-size:11px;color:var(--muted2);line-height:1.4;max-width:160px;flex-shrink:0}
+    /* Compact bar right side */
+    .dash-right{display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:auto}
+    .dash-disp{text-align:right}
+    .dash-disp-lbl{font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;display:block;line-height:1.2}
+    .dash-disp-amt{font-size:17px;font-weight:900;color:var(--green);display:block}
+    .dash-ritmo{font-size:10px;font-weight:700}
+    .dash-chevron{font-size:11px;color:var(--muted);transition:transform .3s;flex-shrink:0;user-select:none}
+    .dash-chevron.open{transform:rotate(180deg)}
+    /* Collapsible detail panel */
+    .dash-detail{overflow:hidden;max-height:0;transition:max-height .38s cubic-bezier(.4,0,.2,1);flex-shrink:0}
+    .dash-detail.open{max-height:520px}
+    .dash-detail-inner{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 16px 14px;display:flex;flex-direction:column;gap:10px}
+    .tip-box{background:rgba(59,130,246,.06);border:1px solid rgba(59,130,246,.15);border-radius:10px;padding:7px 10px;font-size:11px;color:var(--muted2);line-height:1.4}
     .tip-box strong{color:var(--accent2);font-size:10px;display:block;margin-bottom:2px}
+    /* Quick actions more toggle */
+    .quick-extra{display:none}
+    .quick-extra.open{display:contents}
+    .quick-more-btn{background:var(--surface2);border:1px solid var(--border);color:var(--muted);padding:9px 14px;border-radius:99px;font-size:12px;font-weight:700;font-family:var(--font);cursor:pointer;white-space:nowrap;min-height:38px;flex-shrink:0;transition:all .15s;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
+    .quick-more-btn:hover{border-color:var(--accent);color:var(--text)}
+    .quick-more-btn:active{background:var(--border);transform:scale(.97)}
 
     /* Modal ¿Lo puedo pagar? */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:100;backdrop-filter:blur(4px);animation:fadeIn .15s ease}
@@ -213,19 +232,13 @@
     /* ── Mobile responsive ────────────────────────── */
     @media(max-width:430px){
       /* Budget grid: 3 cols on small phones */
-      .budget-grid{grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 12px}
-      /* Hide tip box to save header space */
-      .tip-box{display:none}
+      .budget-grid{grid-template-columns:repeat(3,1fr);gap:6px;padding:0}
       /* Health panel compact */
-      .health-panel{padding:8px 12px;gap:8px}
-      .score-personalidad{display:none}
+      .health-panel{padding:0 12px;gap:10px}
+      .dash-disp-amt{font-size:15px}
       /* Header compact */
       .chat-header{padding:10px 14px}
       .chat-header-info h1{font-size:15px}
-      /* Disponible bar compact */
-      .disponible-bar{padding:6px 12px 8px}
-      .disponible-label{font-size:10px}
-      .disponible-amount{font-size:12px;min-width:60px}
       /* Messages use full width */
       .message{max-width:95%}
       .bubble{font-size:13px}
@@ -257,6 +270,14 @@
     <button id="auth-login-btn" onclick="doLogin()" style="background:#3b82f6;color:white;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;width:100%;">Iniciar sesion</button>
     <button id="auth-register-btn" onclick="doRegister()" style="background:#141929;color:#94a3b8;border:1px solid #1e2740;border-radius:12px;padding:16px;font-size:15px;font-weight:600;font-family:var(--font);cursor:pointer;width:100%;">Crear cuenta nueva</button>
     <button id="auth-switch-btn" onclick="usarOtraCuenta()" style="display:none;background:none;color:#64748b;border:none;padding:8px;font-size:13px;font-family:var(--font);cursor:pointer;text-decoration:underline;">Usar otra cuenta</button>
+    <div style="display:flex;align-items:center;gap:10px;margin-top:4px">
+      <div style="flex:1;height:1px;background:#1e2740"></div>
+      <span style="font-size:11px;color:#64748b;white-space:nowrap">o prueba sin registrarte</span>
+      <div style="flex:1;height:1px;background:#1e2740"></div>
+    </div>
+    <button onclick="entrarDemo()" style="background:linear-gradient(135deg,#1d4ed8,#3b82f6);color:white;border:none;border-radius:12px;padding:16px;font-size:15px;font-weight:700;font-family:var(--font);cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 0 20px rgba(59,130,246,.3)">
+      <span>🎯</span> Ver demo en vivo — Carlos
+    </button>
   </div>
 </div>
 
@@ -437,13 +458,14 @@
     <div class="chat-avatar">AL</div>
     <div class="chat-header-info">
       <h1>ALD<span>.IA</span></h1>
-      <p id="chat-email-label">● En línea — tu asistente financiera diaria</p>
+      <p id="chat-email-label">● En línea</p>
     </div>
     <button class="chat-reset" onclick="doLogout()" style="margin-left:auto">Salir</button>
-    <button class="chat-reset" onclick="hardReset()" style="margin-left:6px">↺ Reset</button>
+    <button class="chat-reset" onclick="hardReset()" style="margin-left:6px">↺</button>
   </div>
-  <!-- Health Score Panel -->
-  <div class="health-panel" id="health-panel" style="display:none">
+
+  <!-- Compact dashboard bar — tap to expand full details -->
+  <div class="health-panel" id="health-panel" style="display:none" onclick="toggleDashboard()">
     <div class="score-ring">
       <svg viewBox="0 0 48 48">
         <circle class="track" cx="24" cy="24" r="20"/>
@@ -461,48 +483,68 @@
         <div class="score-bar-item" title="Meta"><div class="score-bar-fill" id="sb-meta" style="background:#a78bfa"></div></div>
       </div>
     </div>
-    <div class="tip-box" id="tip-box">
-      <strong>💡 Tip del día</strong>
-      <span id="tip-text">Cargando...</span>
+    <div class="dash-right">
+      <div class="dash-disp">
+        <span class="dash-disp-lbl">Disponible</span>
+        <span class="dash-disp-amt" id="disp-compact">—</span>
+      </div>
+      <span class="dash-ritmo" id="ritmo-compact" style="color:var(--muted)">—</span>
+      <span class="dash-chevron" id="dash-chevron">▼</span>
     </div>
   </div>
 
-  <div class="budget-grid">
-    <div class="budget-item" id="bi-vivienda"><span class="budget-label">Vivienda</span><div class="budget-track"><div class="budget-fill green" id="fillVivienda"></div></div><span class="budget-amount" id="amtVivienda">—</span></div>
-    <div class="budget-item" id="bi-comida"><span class="budget-label">Comida</span><div class="budget-track"><div class="budget-fill green" id="fillComida"></div></div><span class="budget-amount" id="amtComida">—</span></div>
-    <div class="budget-item" id="bi-transporte"><span class="budget-label">Transporte</span><div class="budget-track"><div class="budget-fill green" id="fillTransporte"></div></div><span class="budget-amount" id="amtTransporte">—</span></div>
-    <div class="budget-item" id="bi-salud"><span class="budget-label">Salud</span><div class="budget-track"><div class="budget-fill green" id="fillSalud"></div></div><span class="budget-amount" id="amtSalud">—</span></div>
-    <div class="budget-item" id="bi-educacion"><span class="budget-label">Educación</span><div class="budget-track"><div class="budget-fill green" id="fillEducacion"></div></div><span class="budget-amount" id="amtEducacion">—</span></div>
-    <div class="budget-item" id="bi-ocio"><span class="budget-label">Ocio</span><div class="budget-track"><div class="budget-fill green" id="fillOcio"></div></div><span class="budget-amount" id="amtOcio">—</span></div>
-    <div class="budget-item" id="bi-ropa"><span class="budget-label">Ropa</span><div class="budget-track"><div class="budget-fill green" id="fillRopa"></div></div><span class="budget-amount" id="amtRopa">—</span></div>
-    <div class="budget-item" id="bi-deudas"><span class="budget-label">Deudas</span><div class="budget-track"><div class="budget-fill green" id="fillDeudas"></div></div><span class="budget-amount" id="amtDeudas">—</span></div>
-    <div class="budget-item"><span class="budget-label">Ahorro</span><div class="budget-track"><div class="budget-fill green" id="fillAhorro"></div></div><span class="budget-amount" id="amtAhorro">—</span></div>
-    <div class="budget-item"><span class="budget-label">Meta</span><div class="budget-track"><div class="budget-fill green" id="fillMeta"></div></div><span class="budget-amount" id="amtMeta">—</span></div>
-  </div>
-  <div class="disponible-bar">
-    <div class="disponible-inner">
-      <span class="disponible-label">💰 Disponible</span>
-      <div class="disponible-track"><div class="disponible-fill" id="fillDisp"></div></div>
-      <span class="disponible-amount" id="amtDisp">—</span>
+  <!-- Collapsible detail: budget + disponible + tip -->
+  <div class="dash-detail" id="dash-detail">
+    <div class="dash-detail-inner">
+      <div class="budget-grid">
+        <div class="budget-item" id="bi-vivienda"><span class="budget-label">Vivienda</span><div class="budget-track"><div class="budget-fill green" id="fillVivienda"></div></div><span class="budget-amount" id="amtVivienda">—</span></div>
+        <div class="budget-item" id="bi-comida"><span class="budget-label">Comida</span><div class="budget-track"><div class="budget-fill green" id="fillComida"></div></div><span class="budget-amount" id="amtComida">—</span></div>
+        <div class="budget-item" id="bi-transporte"><span class="budget-label">Transporte</span><div class="budget-track"><div class="budget-fill green" id="fillTransporte"></div></div><span class="budget-amount" id="amtTransporte">—</span></div>
+        <div class="budget-item" id="bi-salud"><span class="budget-label">Salud</span><div class="budget-track"><div class="budget-fill green" id="fillSalud"></div></div><span class="budget-amount" id="amtSalud">—</span></div>
+        <div class="budget-item" id="bi-educacion"><span class="budget-label">Educación</span><div class="budget-track"><div class="budget-fill green" id="fillEducacion"></div></div><span class="budget-amount" id="amtEducacion">—</span></div>
+        <div class="budget-item" id="bi-ocio"><span class="budget-label">Ocio</span><div class="budget-track"><div class="budget-fill green" id="fillOcio"></div></div><span class="budget-amount" id="amtOcio">—</span></div>
+        <div class="budget-item" id="bi-ropa"><span class="budget-label">Ropa</span><div class="budget-track"><div class="budget-fill green" id="fillRopa"></div></div><span class="budget-amount" id="amtRopa">—</span></div>
+        <div class="budget-item" id="bi-deudas"><span class="budget-label">Deudas</span><div class="budget-track"><div class="budget-fill green" id="fillDeudas"></div></div><span class="budget-amount" id="amtDeudas">—</span></div>
+        <div class="budget-item"><span class="budget-label">Ahorro</span><div class="budget-track"><div class="budget-fill green" id="fillAhorro"></div></div><span class="budget-amount" id="amtAhorro">—</span></div>
+        <div class="budget-item"><span class="budget-label">Meta</span><div class="budget-track"><div class="budget-fill green" id="fillMeta"></div></div><span class="budget-amount" id="amtMeta">—</span></div>
+      </div>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div class="disponible-inner">
+          <span class="disponible-label">💰 Disponible</span>
+          <div class="disponible-track"><div class="disponible-fill" id="fillDisp"></div></div>
+          <span class="disponible-amount" id="amtDisp">—</span>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Ritmo del mes</span>
+          <div style="flex:1;height:3px;background:var(--surface2);border-radius:99px;overflow:hidden"><div id="fillRitmo" style="height:100%;border-radius:99px;background:var(--green);width:0%;transition:width .6s"></div></div>
+          <span id="lblRitmo" style="font-size:9px;color:var(--muted);white-space:nowrap">—</span>
+        </div>
+      </div>
+      <div class="tip-box" id="tip-box">
+        <strong>💡 Tip del día</strong>
+        <span id="tip-text">Cargando...</span>
+      </div>
     </div>
-    <div style="display:flex;align-items:center;gap:6px;margin-top:4px">
-      <span style="font-size:9px;color:var(--muted);text-transform:uppercase;letter-spacing:.4px">Ritmo del mes</span>
-      <div style="flex:1;height:3px;background:var(--surface2);border-radius:99px;overflow:hidden"><div id="fillRitmo" style="height:100%;border-radius:99px;background:var(--green);width:0%;transition:width .6s"></div></div>
-      <span id="lblRitmo" style="font-size:9px;color:var(--muted);white-space:nowrap">—</span>
-    </div>
   </div>
+
   <div class="messages" id="messages"></div>
+
+  <!-- Quick actions: 3 primary + toggle for rest -->
   <div class="quick-actions">
     <button class="quick-btn" onclick="sendQuick('¿Cómo voy este mes?')">📊 ¿Cómo voy?</button>
     <button class="quick-btn" onclick="sendQuick('¿Cuánto puedo gastar hoy sin afectar mi meta?')">💸 ¿Cuánto gastar?</button>
     <button class="quick-btn" onclick="mostrarAlertas()">🔔 Alertas</button>
-    <button class="quick-btn" onclick="mostrarHistorial()">🧾 Historial</button>
-    <button class="quick-btn" onclick="mostrarGrafica()">📈 Gráfica</button>
-    <button class="quick-btn" onclick="abrirModal()">💸 ¿Lo puedo pagar?</button>
-    <button class="quick-btn" onclick="abrirConectarBanco()">🏦 Conectar banco</button>
-    <button class="quick-btn" onclick="document.getElementById('file-import').click()">📂 Importar estado</button>
-    <input type="file" id="file-import" accept=".csv,.pdf" style="display:none" onchange="importarEstado(this)">
+    <button class="quick-more-btn" id="quick-more-btn" onclick="toggleQuickMore()">··· Más</button>
+    <div class="quick-extra" id="quick-extra">
+      <button class="quick-btn" onclick="mostrarHistorial()">🧾 Historial</button>
+      <button class="quick-btn" onclick="mostrarGrafica()">📈 Gráfica</button>
+      <button class="quick-btn" onclick="abrirModal()">💸 ¿Lo puedo pagar?</button>
+      <button class="quick-btn" onclick="abrirConectarBanco()">🏦 Conectar banco</button>
+      <button class="quick-btn" onclick="document.getElementById('file-import').click()">📂 Importar estado</button>
+      <input type="file" id="file-import" accept=".csv,.pdf" style="display:none" onchange="importarEstado(this)">
+    </div>
   </div>
+
   <div class="input-area">
     <textarea id="input" placeholder="Ej: gasté $200 en comida, recibí mi quincena..." rows="1" onkeydown="handleKey(event)" oninput="autoResize(this)"></textarea>
     <button class="send-btn" id="sendBtn" onclick="sendMessage()">
@@ -589,6 +631,36 @@
       document.getElementById('auth-screen').style.display = 'flex';
     }
   });
+
+  async function entrarDemo() {
+    const btn = event.currentTarget;
+    btn.textContent = 'Cargando...';
+    btn.disabled = true;
+    document.getElementById('auth-email').value = 'demo@aldia.mx';
+    document.getElementById('auth-password').value = 'aldia2026';
+    document.getElementById('auth-error').textContent = '';
+    try {
+      const res = await fetch('/api/login', {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({email:'demo@aldia.mx', password:'aldia2026'})});
+      const data = await res.json();
+      if (data.error) { document.getElementById('auth-error').textContent = 'Cuenta demo no encontrada. Pide al equipo que ejecute seed_demo.py'; btn.textContent = '🎯 Ver demo en vivo — Carlos'; btn.disabled = false; return; }
+      document.getElementById('auth-screen').style.display = 'none';
+      if (data.ingreso) answers.ingreso = data.ingreso;
+      if (data.meta) answers.meta = data.meta;
+      if (data.plazo_meses) answers.plazo_meses = data.plazo_meses;
+      answers.vivienda = data.tiene_vivienda; answers.transporte = data.tiene_transporte;
+      answers.deudas = data.tiene_deudas; answers.educacion = data.tiene_educacion;
+      if (data.nombre) answers.nombre = data.nombre;
+      const lbl = document.getElementById('chat-email-label');
+      if (lbl) lbl.textContent = '● ' + (data.nombre || 'Carlos');
+      document.getElementById('chat').classList.add('active');
+      hideCats(); ingresoRef = answers.ingreso || 0;
+      setTimeout(() => {
+        fetch('/api/budget').then(r=>r.json()).then(b=>{ if(b.budget) updateBudget(b.budget); });
+        loadHealthScore();
+      }, 300);
+      fetch('/api/resumen').then(r=>r.json()).then(b=>{ addMessage('aldia', b.resumen || '¡Hola Carlos! Bienvenido a tu cuenta demo. Explora todo lo que ALD.IA puede hacer por ti.'); });
+    } catch { document.getElementById('auth-error').textContent = 'Error de conexión.'; btn.textContent = '🎯 Ver demo en vivo — Carlos'; btn.disabled = false; }
+  }
 
   function usarOtraCuenta() {
     // Cerrar sesion actual y mostrar formulario limpio
@@ -794,6 +866,8 @@
       const amtD  = document.getElementById('amtDisp');
       if (fillD) { fillD.style.width = '100%'; fillD.style.background = 'var(--green)'; }
       if (amtD)  { amtD.textContent = '$' + ingresoRef.toLocaleString('es-MX'); amtD.style.color = 'var(--green)'; }
+      const dispC = document.getElementById('disp-compact');
+      if (dispC) { dispC.textContent = '$' + ingresoRef.toLocaleString('es-MX'); dispC.style.color = 'var(--green)'; }
     }
 
     // Calcular ahorro real segun disponibilidad
@@ -837,6 +911,22 @@
 
   function handleKey(e) {
     if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); sendMessage(); }
+  }
+
+  function toggleDashboard() {
+    const detail = document.getElementById('dash-detail');
+    const chevron = document.getElementById('dash-chevron');
+    if (!detail) return;
+    const open = detail.classList.toggle('open');
+    if (chevron) chevron.classList.toggle('open', open);
+  }
+
+  function toggleQuickMore() {
+    const extra = document.getElementById('quick-extra');
+    const btn = document.getElementById('quick-more-btn');
+    if (!extra) return;
+    const open = extra.classList.toggle('open');
+    if (btn) btn.textContent = open ? '··· Menos' : '··· Más';
   }
 
   function sendQuick(text) {
@@ -904,6 +994,8 @@
       const fD = document.getElementById('fillDisp'), aD = document.getElementById('amtDisp');
       if (fD) { fD.style.width = pD + '%'; fD.style.background = d > ref*.5 ? 'var(--green)' : d > ref*.2 ? 'var(--yellow)' : 'var(--red)'; }
       if (aD) { aD.textContent = '$' + d.toLocaleString('es-MX'); aD.style.color = d > ref*.2 ? 'var(--green)' : 'var(--red)'; }
+      const dC = document.getElementById('disp-compact');
+      if (dC) { dC.textContent = '$' + d.toLocaleString('es-MX'); dC.style.color = d > ref*.2 ? 'var(--green)' : 'var(--red)'; }
     }
   }
 
@@ -1002,18 +1094,22 @@
     if (!fill || !lbl) return;
     const pctBarra = Math.min(proyeccion * 100, 100);
     fill.style.width = pctBarra + '%';
+    const rC = document.getElementById('ritmo-compact');
     if (proyeccion <= 0.85) {
       fill.style.background = 'var(--green)';
       lbl.textContent = '✅ Buen ritmo';
       lbl.style.color = 'var(--green)';
+      if (rC) { rC.textContent = '✅ Buen ritmo'; rC.style.color = 'var(--green)'; }
     } else if (proyeccion <= 1.05) {
       fill.style.background = 'var(--yellow)';
       lbl.textContent = '⚠️ Al límite';
       lbl.style.color = 'var(--yellow)';
+      if (rC) { rC.textContent = '⚠️ Al límite'; rC.style.color = 'var(--yellow)'; }
     } else {
       fill.style.background = 'var(--red)';
       lbl.textContent = '🔴 Ritmo alto';
       lbl.style.color = 'var(--red)';
+      if (rC) { rC.textContent = '🔴 Ritmo alto'; rC.style.color = 'var(--red)'; }
     }
   }
   async function resetData() { await fetch('/api/reset-data',{method:'POST'}); location.reload(); }
@@ -1132,7 +1228,13 @@
       }).then(r => r.json()).then(d => {
         if (d.error) return;
         resultEl.className = 'modal-result ' + (d.puede ? 'ok' : 'nok');
-        resultEl.textContent = d.mensaje + (d.impacto_pct ? ` (${d.impacto_pct}% de tu ingreso)` : '');
+        let tiempoStr = '';
+        if (d.horas_trabajadas) {
+          tiempoStr = d.horas_trabajadas < 8
+            ? ` · ⏱ ${d.horas_trabajadas}h de trabajo`
+            : ` · ⏱ ${d.dias_trabajados} días de trabajo`;
+        }
+        resultEl.innerHTML = d.mensaje + (d.impacto_pct ? `<br><small style="opacity:.7">${d.impacto_pct}% de tu ingreso${tiempoStr}</small>` : '');
       }).catch(() => {});
     }, 400);
   }
@@ -1279,6 +1381,9 @@
             <div class="cuenta-saldo">${c.saldo !== undefined ? '$' + c.saldo.toLocaleString('es-MX') : 'Crédito: $' + (c.usado || 0).toLocaleString('es-MX') + ' / $' + (c.limite || 0).toLocaleString('es-MX')}</div>
           </div>`).join('');
         document.getElementById('banco-close-btn').textContent = '¡Listo!';
+        // Actualizar budget grid y health score con los datos actuales
+        fetch('/api/budget').then(r=>r.json()).then(b=>{ if(b.budget) updateBudget(b.budget); });
+        loadHealthScore();
         // Mensaje en el chat
         addMessage('aldia', `🏦 ${banco} conectado. ${data.mensaje}\n\nYa puedo ver tus movimientos y darte consejos más precisos.`);
       }).catch(() => {

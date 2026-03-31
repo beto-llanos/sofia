@@ -362,10 +362,16 @@ def get_system_prompt(perfil, gastos):
 
     recomendaciones_str = f"\n\nRECOMENDACIONES FINANCIERAS ACTIVAS (menciona 1-2 cuando sea relevante, siempre con Banco Azteca primero):\n{recomendaciones}" if recomendaciones else ""
 
+    # Equivalencia en tiempo de trabajo (diferenciador clave vs competencia)
+    tarifa_hora = round(ingreso / 160, 1) if ingreso > 0 else 0  # 160h = mes laboral estándar
+    tarifa_dia  = round(ingreso / 20, 1)  if ingreso > 0 else 0  # 20 días hábiles
+
     nombre_directive = f"- El usuario se llama {nombre}. Llámalo por su nombre de vez en cuando (no en cada mensaje, solo cuando sea natural).\n" if nombre else ""
     return f"""Eres ALD.IA, asistente financiera personal para jovenes mexicanos. Hoy es {fecha}, dia {dia}.
 
 {contexto}{recomendaciones_str}
+
+TARIFA LABORAL DEL USUARIO: ${tarifa_hora:,.1f}/hora · ${tarifa_dia:,.0f}/dia (basado en su ingreso mensual de ${ingreso:,.0f} entre 160h laborales al mes)
 
 CATEGORIAS: vivienda, comida, transporte, salud, educacion, ocio, ropa, deudas, ahorro, imprevistos.
 
@@ -373,7 +379,7 @@ EJEMPLOS DE RESPUESTAS CORRECTAS:
 Usuario: "gaste 500 en uber" -> "Transporte registrado ✅ Te quedan ${disponible-500:,.0f} disponibles."
 Usuario: "como voy?" -> "Llevas ${total_gastado:,.0f} gastados. A este ritmo terminas el mes en ${proyeccion_fin_mes:,.0f} — {'bien 👍' if en_buen_ritmo else 'cuidado ⚠️'}."
 Usuario: "que puedo recortar?" -> Analiza las categorias con mayor uso vs limite y sugiere 1-2 concretas.
-Usuario: "si compro X de $Y me afecta?" -> Calcula disponible - Y y di si es viable o no.
+Usuario: "¿puedo comprar unos tenis de $2000?" -> "Eso es {round(2000/tarifa_hora, 1) if tarifa_hora > 0 else '?'} horas de trabajo o {round(2000/tarifa_dia, 1) if tarifa_dia > 0 else '?'} dias. ¿Lo puedo pagar? [analiza disponible_real]"
 
 FORMATO OBLIGATORIO:
 - Maximo 2-3 oraciones cortas con emojis
@@ -388,6 +394,7 @@ REGLAS:
 - Si el ritmo de gasto proyecta sobrepasar el ingreso, advertir con tono de aliado
 - Si la meta es imposible con el ritmo actual, decirlo con alternativa concreta
 - Cuando registres un gasto, siempre confirma categoria + disponible restante{tono_inversor}
+- REGLA CLAVE: Cuando el usuario pregunta si puede comprar algo o evalua un gasto grande, SIEMPRE menciona cuantas horas o dias de trabajo representa ese monto usando la TARIFA LABORAL. Ej: "$3,500 = 4.7 dias de trabajo". Esto da consciencia real del valor del dinero.
 
 INSTRUCCION CRITICA: Al final de CADA respuesta agrega exactamente esto (con los numeros reales):
 BUDGET_DATA:{{"vivienda_pct":0,"comida_pct":0,"transporte_pct":0,"salud_pct":0,"educacion_pct":0,"ocio_pct":0,"ropa_pct":0,"deudas_pct":0,"ahorro_pct":0,"meta_pct":0,"disponible":{disponible},"ingreso":{ingreso}}}
@@ -980,6 +987,9 @@ def puede_pagar():
     puede = monto <= disponible_real
     impacto_pct = round(monto / ingreso * 100, 1)
 
+    horas_trabajadas = round(monto / (ingreso / 160), 1) if ingreso > 0 else 0
+    dias_trabajados = round(horas_trabajadas / 8, 1)
+
     return jsonify({
         "puede": puede,
         "monto": monto,
@@ -987,11 +997,138 @@ def puede_pagar():
         "disponible_real": round(disponible_real),
         "impacto_pct": impacto_pct,
         "colchon_meta": round(colchon_meta),
+        "horas_trabajadas": horas_trabajadas,
+        "dias_trabajados": dias_trabajados,
         "mensaje": (
             f"✅ Sí puedes. Te quedarán ${disponible_real - monto:,.0f} libres." if puede
             else f"⚠️ Cuidado. Solo tienes ${disponible_real:,.0f} disponibles sin tocar tu meta."
         )
     })
+
+
+@app.route("/api/eliminar-ultimo", methods=["POST"])
+def eliminar_ultimo():
+    session_id = get_session_id()
+    try:
+        res = sb.table("gastos").select("id,categoria,monto,descripcion") \
+               .eq("session_id", session_id) \
+               .order("created_at", desc=True).limit(1).execute()
+        if not res.data:
+            return jsonify({"error": "No hay gastos para deshacer"})
+        row = res.data[0]
+        sb.table("gastos").delete().eq("id", row["id"]).execute()
+        return jsonify({"status": "ok", "eliminado": row})
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+@app.route("/api/exportar-reporte", methods=["GET"])
+def exportar_reporte():
+    import csv, io
+    from flask import Response
+    session_id = get_session_id()
+    perfil = load_perfil(session_id)
+    try:
+        res = sb.table("gastos").select("created_at,categoria,monto,descripcion") \
+               .eq("session_id", session_id).order("created_at", desc=True).execute()
+        rows = res.data or []
+        output = io.StringIO()
+        writer = csv.writer(output)
+        writer.writerow(["Fecha", "Categoria", "Monto", "Descripcion"])
+        for r in rows:
+            writer.writerow([
+                r.get("created_at", "")[:10],
+                r.get("categoria", ""),
+                r.get("monto", 0),
+                r.get("descripcion", "")
+            ])
+        output.seek(0)
+        nombre = perfil.get("nombre", "usuario")
+        return Response(
+            output.getvalue(),
+            mimetype="text/csv",
+            headers={"Content-Disposition": f"attachment; filename=aldIA_{nombre}.csv"}
+        )
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
+@app.route("/api/actualizar-perfil", methods=["POST"])
+def actualizar_perfil():
+    data = request.json or {}
+    session_id = get_session_id()
+    perfil = load_perfil(session_id)
+    if data.get("ingreso") and float(data["ingreso"]) > 0:
+        perfil["ingreso"] = float(data["ingreso"])
+    if "tiene_vivienda" in data:
+        perfil["tiene_vivienda"] = bool(data["tiene_vivienda"])
+    if "tiene_transporte" in data:
+        perfil["tiene_transporte"] = bool(data["tiene_transporte"])
+    if "tiene_deudas" in data:
+        perfil["tiene_deudas"] = bool(data["tiene_deudas"])
+    if "tiene_educacion" in data:
+        perfil["tiene_educacion"] = bool(data["tiene_educacion"])
+    if data.get("meta") and float(data["meta"]) > 0:
+        perfil["meta"] = float(data["meta"])
+    if data.get("plazo_meses"):
+        perfil["plazo_meses"] = int(data["plazo_meses"])
+    if data.get("estrictez"):
+        perfil["estrictez"] = data["estrictez"]
+    save_perfil(perfil)
+    hideCats_data = {
+        "tiene_vivienda": perfil.get("tiene_vivienda", True),
+        "tiene_transporte": perfil.get("tiene_transporte", True),
+        "tiene_deudas": perfil.get("tiene_deudas", True),
+        "tiene_educacion": perfil.get("tiene_educacion", True),
+        "ingreso": perfil.get("ingreso", 0)
+    }
+    return jsonify({"status": "ok", **hideCats_data})
+
+
+@app.route("/api/comparativa-mes", methods=["GET"])
+def comparativa_mes():
+    session_id = get_session_id()
+    perfil = load_perfil(session_id)
+    ingreso = perfil.get("ingreso", 0)
+    if ingreso == 0:
+        return jsonify({"error": "sin perfil"})
+    now = datetime.now()
+    mes_actual_inicio = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
+    if now.month == 1:
+        mes_ant_year, mes_ant_month = now.year - 1, 12
+    else:
+        mes_ant_year, mes_ant_month = now.year, now.month - 1
+    mes_ant_inicio = f"{mes_ant_year}-{mes_ant_month:02d}-01T00:00:00"
+    mes_act_str = mes_actual_inicio.strftime("%Y-%m-%dT%H:%M:%S")
+    try:
+        res_act = sb.table("gastos").select("categoria,monto").eq("session_id", session_id).gte("created_at", mes_act_str).execute()
+        res_ant = sb.table("gastos").select("categoria,monto").eq("session_id", session_id).gte("created_at", mes_ant_inicio).lt("created_at", mes_act_str).execute()
+        actual = {}
+        for r in (res_act.data or []):
+            actual[r["categoria"]] = actual.get(r["categoria"], 0) + r["monto"]
+        anterior = {}
+        for r in (res_ant.data or []):
+            anterior[r["categoria"]] = anterior.get(r["categoria"], 0) + r["monto"]
+        total_actual = sum(actual.values())
+        total_anterior = sum(anterior.values())
+        all_cats = set(list(actual.keys()) + list(anterior.keys()))
+        comparativas = []
+        for cat in all_cats:
+            a = actual.get(cat, 0)
+            p = anterior.get(cat, 0)
+            comparativas.append({"categoria": cat, "actual": round(a), "anterior": round(p), "diff": round(a - p), "mejor": (a - p) <= 0})
+        comparativas.sort(key=lambda x: abs(x["diff"]), reverse=True)
+        meses_es = ["enero","febrero","marzo","abril","mayo","junio","julio","agosto","septiembre","octubre","noviembre","diciembre"]
+        return jsonify({
+            "mes_actual": meses_es[now.month - 1],
+            "mes_anterior": meses_es[mes_ant_month - 1],
+            "total_actual": round(total_actual),
+            "total_anterior": round(total_anterior),
+            "diff_total": round(total_actual - total_anterior),
+            "comparativas": comparativas[:10]
+        })
+    except Exception as e:
+        return jsonify({"error": str(e)})
 
 
 @app.route("/api/historial", methods=["GET"])
