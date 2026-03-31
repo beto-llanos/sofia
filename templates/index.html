@@ -13,8 +13,10 @@
       --font:'Plus Jakarta Sans',sans-serif;
     }
     *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-    body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;user-select:none}
-    @supports(-webkit-touch-callout:none){body{height:-webkit-fill-available}}
+    html{height:100%;overflow:hidden}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);height:100dvh;display:flex;flex-direction:column;overflow:hidden;user-select:none;overscroll-behavior:none;touch-action:manipulation}
+    /* iOS Safari: lock body position so keyboard doesn't break scroll */
+    @supports(-webkit-touch-callout:none){body{height:-webkit-fill-available;position:fixed;width:100%;top:0;left:0}}
 
     #onboarding{flex:1;display:flex;flex-direction:column}
     .ob-header{padding:20px 24px 16px;display:flex;align-items:center;gap:16px;flex-shrink:0}
@@ -95,11 +97,11 @@
     .disponible-track{flex:1;height:8px;background:var(--surface2);border-radius:99px;overflow:hidden}
     .disponible-fill{height:100%;border-radius:99px;transition:width .6s cubic-bezier(.4,0,.2,1);background:var(--green)}
     .disponible-amount{font-size:13px;font-weight:800;color:var(--green);white-space:nowrap;min-width:80px;text-align:right}
-    .messages{flex:1;overflow-y:auto;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0}
-    .message{display:flex;gap:8px;max-width:84%;animation:fadeUp .2s ease}
+    .messages{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch;overscroll-behavior-y:contain;padding:16px;display:flex;flex-direction:column;gap:10px;min-height:0}
+    .message{display:flex;gap:8px;max-width:88%;animation:fadeUp .2s ease}
     @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
     .message.user{align-self:flex-end;flex-direction:row-reverse}
-    .bubble{padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.6}
+    .bubble{padding:10px 14px;border-radius:14px;font-size:14px;line-height:1.6;overflow-x:auto;word-break:break-word;-webkit-overflow-scrolling:touch}
     .message.aldia .bubble{background:var(--surface2);border:1px solid var(--border);border-radius:4px 14px 14px 14px;color:#cbd5e1}
     .message.user .bubble{background:#1d4ed8;border-radius:14px 4px 14px 14px;color:white}
     .alert-bubble{background:rgba(234,179,8,.08)!important;border-color:rgba(234,179,8,.3)!important;color:#fde047!important}
@@ -111,17 +113,21 @@
     .typing span:nth-child(2){animation-delay:.2s}
     .typing span:nth-child(3){animation-delay:.4s}
     @keyframes bounce{0%,80%,100%{transform:translateY(0)}40%{transform:translateY(-5px)}}
-    .quick-actions{display:flex;gap:6px;padding:0 16px 10px;overflow-x:auto;flex-shrink:0}
-    .quick-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted2);padding:5px 12px;border-radius:99px;font-size:11px;font-weight:600;font-family:var(--font);cursor:pointer;white-space:nowrap;transition:all .15s}
+    .quick-actions{display:flex;gap:8px;padding:6px 16px 10px;overflow-x:auto;-webkit-overflow-scrolling:touch;scrollbar-width:none;flex-shrink:0}
+    .quick-actions::-webkit-scrollbar{display:none}
+    .quick-btn{background:var(--surface);border:1px solid var(--border);color:var(--muted2);padding:9px 14px;border-radius:99px;font-size:12px;font-weight:600;font-family:var(--font);cursor:pointer;white-space:nowrap;transition:all .15s;min-height:38px;-webkit-tap-highlight-color:transparent;touch-action:manipulation}
     .quick-btn:hover{border-color:var(--accent);color:var(--text)}
-    .input-area{padding:10px 16px;padding-bottom:max(10px,env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
-    .input-area textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 14px;font-size:14px;font-family:var(--font);resize:none;outline:none;max-height:100px;line-height:1.5;transition:border-color .15s}
+    .quick-btn:active{background:var(--border);transform:scale(.97)}
+    .input-area{padding:10px 16px;padding-bottom:max(12px,env(safe-area-inset-bottom));background:var(--surface);border-top:1px solid var(--border);display:flex;gap:8px;align-items:flex-end;flex-shrink:0}
+    .input-area textarea{flex:1;background:var(--bg);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 14px;font-size:16px;font-family:var(--font);resize:none;outline:none;max-height:120px;line-height:1.5;transition:border-color .15s;-webkit-appearance:none;appearance:none}
     .input-area textarea:focus{border-color:var(--accent)}
-    .input-area textarea::placeholder{color:var(--border)}
-    .send-btn{width:40px;height:40px;background:var(--accent);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0}
+    .input-area textarea::placeholder{color:var(--muted)}
+    /* 44pt minimum touch target per Apple HIG */
+    .send-btn{width:44px;height:44px;background:var(--accent);border:none;border-radius:12px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all .15s;flex-shrink:0;touch-action:manipulation}
     .send-btn:hover{background:#2563eb}
-    .send-btn:disabled{background:var(--border);cursor:default}
-    .send-btn svg{width:16px;height:16px;fill:white}
+    .send-btn:active{background:#1d4ed8;transform:scale(.95)}
+    .send-btn:disabled{background:var(--border);cursor:default;transform:none}
+    .send-btn svg{width:18px;height:18px;fill:white}
     ::-webkit-scrollbar{width:3px}
     ::-webkit-scrollbar-track{background:transparent}
     ::-webkit-scrollbar-thumb{background:var(--border);border-radius:99px}
@@ -146,7 +152,7 @@
     /* Modal ¿Lo puedo pagar? */
     .modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);display:flex;align-items:flex-end;justify-content:center;z-index:100;backdrop-filter:blur(4px);animation:fadeIn .15s ease}
     @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-    .modal-card{background:var(--surface);border-radius:24px 24px 0 0;padding:24px;width:100%;max-width:480px;animation:slideUp .25s cubic-bezier(.4,0,.2,1)}
+    .modal-card{background:var(--surface);border-radius:24px 24px 0 0;padding:24px;padding-bottom:max(24px,env(safe-area-inset-bottom));width:100%;max-width:480px;max-height:92dvh;overflow-y:auto;-webkit-overflow-scrolling:touch;animation:slideUp .25s cubic-bezier(.4,0,.2,1)}
     @keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
     .modal-title{font-size:18px;font-weight:800;margin-bottom:4px}
     .modal-sub{font-size:13px;color:var(--muted2);margin-bottom:16px}
@@ -203,6 +209,39 @@
     .alerta-consejo{font-size:11px;color:var(--muted2);line-height:1.5}
     .alerta-bar{height:3px;background:var(--surface2);border-radius:99px;overflow:hidden;margin:6px 0}
     .alerta-bar-fill{height:100%;border-radius:99px;transition:width .5s}
+
+    /* ── Mobile responsive ────────────────────────── */
+    @media(max-width:430px){
+      /* Budget grid: 3 cols on small phones */
+      .budget-grid{grid-template-columns:repeat(3,1fr);gap:6px;padding:8px 12px}
+      /* Hide tip box to save header space */
+      .tip-box{display:none}
+      /* Health panel compact */
+      .health-panel{padding:8px 12px;gap:8px}
+      .score-personalidad{display:none}
+      /* Header compact */
+      .chat-header{padding:10px 14px}
+      .chat-header-info h1{font-size:15px}
+      /* Disponible bar compact */
+      .disponible-bar{padding:6px 12px 8px}
+      .disponible-label{font-size:10px}
+      .disponible-amount{font-size:12px;min-width:60px}
+      /* Messages use full width */
+      .message{max-width:95%}
+      .bubble{font-size:13px}
+      /* Historial table: hide description column on tiny screens */
+      .hist-table td:last-child,.hist-table th:last-child{display:none}
+      /* Auth screen */
+      #auth-screen{padding:24px 20px}
+    }
+    @media(max-width:360px){
+      .budget-grid{grid-template-columns:repeat(3,1fr);font-size:8px}
+      .budget-label{font-size:8px}
+      .chat-reset{font-size:10px;padding:4px 8px}
+    }
+    /* Prevent iOS input zoom (font-size must be >=16px) */
+    #auth-email,#auth-password{font-size:16px!important}
+    .modal-input-wrap input{font-size:16px!important}
   </style>
 </head>
 <body>
@@ -1276,6 +1315,23 @@
       addMessage('aldia', 'Error procesando el archivo.');
     }
     input.value = '';
+  }
+
+  // ── iOS Safari: resize chat when virtual keyboard appears ─────────────────
+  // Without this, the keyboard covers the input bar on some iOS versions
+  if (window.visualViewport) {
+    let lastH = window.visualViewport.height;
+    window.visualViewport.addEventListener('resize', () => {
+      const chat = document.getElementById('chat');
+      if (!chat || !chat.classList.contains('active')) return;
+      const h = window.visualViewport.height;
+      // When keyboard appears (height shrinks), set explicit height so flex layout adapts
+      chat.style.height = h + 'px';
+      // Scroll messages to bottom so last message stays visible above keyboard
+      const msgs = document.getElementById('messages');
+      if (msgs && h < lastH) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 50);
+      lastH = h;
+    });
   }
 </script>
 </body>
