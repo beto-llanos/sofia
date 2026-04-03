@@ -83,32 +83,6 @@
     .send-btn{width:40px;height:40px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:1rem;cursor:pointer;transition:.15s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
     .send-btn:hover{opacity:.85;}
     .send-btn:disabled{opacity:.4;cursor:not-allowed;}
-    .health-panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:14px;}
-    .hp-title{font-size:.78rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
-    .hp-score{font-size:2.2rem;font-weight:800;text-align:center;margin-bottom:2px;}
-    .hp-label{font-size:.72rem;color:var(--text2);text-align:center;margin-bottom:12px;}
-    .hp-factors{display:flex;flex-direction:column;gap:7px;}
-    .hp-row{display:flex;align-items:center;gap:8px;font-size:.8rem;}
-    .hp-row span:last-child{margin-left:auto;font-weight:600;}
-    .hp-bar-bg{flex:1;height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;}
-    .hp-bar-fill{height:100%;border-radius:3px;transition:width .6s;}
-    .budget-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;}
-    .budget-section-title{font-size:.78rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:10px;}
-    .budget-grid{display:flex;flex-direction:column;gap:8px;}
-    .budget-item{display:flex;flex-direction:column;gap:3px;}
-    .bi-label{display:flex;justify-content:space-between;font-size:.78rem;}
-    .bi-label span:first-child{color:var(--text2);}
-    .bi-bar{height:5px;background:rgba(255,255,255,.1);border-radius:3px;overflow:hidden;}
-    .bi-fill{height:100%;border-radius:3px;background:var(--green);transition:width .6s;}
-    .disp-section{background:var(--surface);border:1px solid var(--border);border-radius:var(--r);padding:12px;}
-    .disp-row{display:flex;justify-content:space-between;align-items:center;font-size:.85rem;margin-bottom:6px;}
-    .disp-row span:first-child{color:var(--text2);}
-    .disp-val{font-size:1.3rem;font-weight:700;color:var(--green);}
-    .tip-box{border-radius:10px;padding:10px 12px;font-size:.8rem;line-height:1.4;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);color:var(--text);}
-    .quick-actions{display:flex;flex-direction:column;gap:6px;}
-    .qa-title{font-size:.78rem;font-weight:600;color:var(--text2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:4px;}
-    .quick-btn{padding:10px 12px;border-radius:10px;border:1px solid var(--border);background:var(--surface);color:var(--text);font-size:.85rem;cursor:pointer;text-align:left;transition:.15s;}
-    .quick-btn:hover{background:var(--surface2);border-color:var(--accent);}
     .dash-detail{overflow:visible;}
     .dash-chevron{display:none;}
     #quick-more-btn{display:none;}
@@ -958,13 +932,17 @@
         method: 'POST', headers: {'Content-Type':'application/json'},
         body: JSON.stringify({message: text})
       });
+      if (!res.ok) throw new Error('HTTP ' + res.status);
       const data = await res.json();
       hideTyping();
-      addMessage('aldia', data.response, data.alert);
-      if (data.budget) { updateBudget(data.budget); loadHealthScore(); }
-    } catch {
+      if (data.error) { addMessage('aldia', '⚠️ ' + data.error); }
+      else {
+        addMessage('aldia', data.response, data.alert);
+        if (data.budget) { updateBudget(data.budget); loadHealthScore(); }
+      }
+    } catch(e) {
       hideTyping();
-      addMessage('aldia', 'Error de conexión. Intenta de nuevo.');
+      addMessage('aldia', '❌ Error de conexión. Intenta de nuevo.');
     }
     sendBtn.disabled = false;
     inputEl.focus();
@@ -997,7 +975,7 @@
           fetch('/api/budget').then(r=>r.json()).then(d=>{ if(d.budget) updateBudget(d.budget); });
           loadHealthScore();
         }, 300);
-        fetch('/api/resumen').then(r=>r.json()).then(d=>{ addMessage('aldia', d.resumen || 'Bienvenido de vuelta!'); });
+        fetch('/api/resumen').then(r=>r.json()).then(d=>{ if(d.resumen) addMessage('aldia', d.resumen); }).catch(()=>{});
       } else {
         document.getElementById('onboarding').style.display = 'flex';
       }

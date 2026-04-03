@@ -205,8 +205,8 @@ def save_gasto(session_id, categoria, monto, descripcion=""):
 
 def load_mensajes(session_id):
     try:
-        res = sb.table("mensajes").select("rol, contenido").eq("session_id", session_id).order("created_at").execute()
-        return [{"role": m["rol"], "content": m["contenido"]} for m in (res.data or [])]
+        res = sb.table("mensajes").select("rol, contenido").eq("session_id", session_id).order("created_at", desc=True).limit(20).execute()
+        return [{"role": m["rol"], "content": m["contenido"]} for m in reversed(res.data or [])]
     except:
         return []
 
@@ -1022,7 +1022,7 @@ def exportar_reporte():
     session_id = get_session_id()
     perfil = load_perfil(session_id)
     try:
-        res = sb.table("gastos").select("categoria, monto, desc, created_at") \
+        res = sb.table("gastos").select("categoria, monto, descripcion, created_at") \
                .eq("session_id", session_id) \
                .order("created_at", desc=True).execute()
         if not res.data:
@@ -1033,7 +1033,7 @@ def exportar_reporte():
         writer.writerow(["Fecha", "Categoría", "Monto", "Descripción"])
 
         for row in res.data:
-            writer.writerow([row["created_at"], row["categoria"], row["monto"], row["desc"]])
+            writer.writerow([row.get("created_at","")[:10], row["categoria"], row["monto"], row.get("descripcion","")])
 
         output.seek(0)
         return Response(output, mimetype="text/csv", headers={"Content-Disposition": "attachment; filename=reporte_gastos.csv"})
@@ -1130,9 +1130,9 @@ def historial():
         for r in (res.data or []):
             rows.append({
                 "fecha": r.get("created_at", "")[:10],
-                "categoria": r["categoria"],
-                "monto": r["monto"],
-                "descripcion": r.get("descripcion", ""),
+                "categoria": r.get("categoria", ""),
+                "monto": r.get("monto", 0),
+                "descripcion": r.get("descripcion", "") or r.get("desc", ""),
             })
         return jsonify({"transacciones": rows})
     except Exception as e:
