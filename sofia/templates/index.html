@@ -2567,7 +2567,15 @@
     const tipBox = document.getElementById('sb-tip-box');
     const tipDisp = document.getElementById('sb-tip-display');
     if (vizEl) {
-      vizEl.innerHTML = cats.map(cat => {
+      let html = '';
+      if (b.gastos_fijos > 0) {
+        const pctFijos = ingresoRef > 0 ? Math.min((b.gastos_fijos / ingresoRef) * 100, 100) : 0;
+        html += `<div class="sb-bv-item">
+          <div class="sb-bv-row"><span class="sb-bv-lbl" style="color:var(--text2)">🔒 Fijos mensuales</span><span class="sb-bv-amt">$${b.gastos_fijos.toLocaleString('es-MX')}</span></div>
+          <div class="sb-bv-track"><div class="sb-bv-fill" style="width:${pctFijos}%;background:var(--text2)"></div></div>
+        </div>`;
+      }
+      html += cats.map(cat => {
         const pct = b[cat+'_pct'] || 0;
         const limite = ingresoRef*(LIMITES_BASE[cat]||0.05);
         const gastado = Math.round(ingresoRef*pct/100);
@@ -2578,6 +2586,7 @@
           <div class="sb-bv-track"><div class="sb-bv-fill" style="width:${uso}%;background:${col}"></div></div>
         </div>`;
       }).join('');
+      vizEl.innerHTML = html;
     }
     if (titleEl) titleEl.style.display = cats.length ? '' : 'none';
     if (tipBox && tipDisp) {

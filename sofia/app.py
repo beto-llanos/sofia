@@ -365,12 +365,12 @@ def get_system_prompt(perfil, gastos):
     elif meta_tipo == 'invertir':
         meta_tipo_rule = "\n- OBJETIVO DEL USUARIO: empezar a invertir. Menciona instrumentos de bajo riesgo (CETES, fondos indexados) cuando haya superávit."
 
-    gastos_fijos_inicio = perfil.get("gastos_fijos_inicio", 0)
+    gastos_fijos_mensuales = perfil.get("gastos_fijos_mensuales", perfil.get("gastos_fijos_inicio", 0))
     contexto = f"""PERFIL DEL USUARIO{nombre_str}:
 - Ingreso mensual: ${ingreso:,.0f} pesos
 - Meta: ${meta:,.0f} pesos en {plazo} meses
 - Objetivo financiero: {meta_tipo_str}
-{f"- Gastos fijos previos al registro (ya descontados): ${gastos_fijos_inicio:,.0f} pesos — NO los trates como gasto nuevo ni alarma" if gastos_fijos_inicio > 0 else ""}- Total gastado este mes: ${total_gastado:,.0f} pesos
+{f"- Gastos fijos recurrentes mensuales (renta, servicios, etc.): ${gastos_fijos_mensuales:,.0f} pesos — se descuentan AUTOMÁTICAMENTE cada mes del disponible, NO los menciones como gasto nuevo ni generes ninguna alerta por ellos" if gastos_fijos_mensuales > 0 else ""}- Total gastado este mes (incluyendo fijos): ${total_gastado:,.0f} pesos
 - Disponible real: ${disponible:,.0f} pesos
 - Dia {dia} de {dias_mes} ({dias_restantes} dias restantes)
 - Tasa de gasto diaria: ${tasa_diaria:,.0f}/dia
@@ -452,7 +452,8 @@ def calculate_budget_data(perfil, gastos):
     meta = perfil.get("meta", 0)
     if ingreso == 0:
         return None
-    total_gastado = sum(gastos.values()) + perfil.get("gastos_fijos_inicio", 0)
+    gastos_fijos = perfil.get("gastos_fijos_mensuales", perfil.get("gastos_fijos_inicio", 0))
+    total_gastado = sum(gastos.values()) + gastos_fijos
     disponible = max(0, ingreso - total_gastado)
 
     def pct(cat):
@@ -469,7 +470,8 @@ def calculate_budget_data(perfil, gastos):
         "ropa_pct": pct("ropa"), "deudas_pct": pct("deudas"),
         "ahorro_pct": ahorro_pct, "meta_pct": min(meta_pct, 100),
         "disponible": round(disponible),
-        "ingreso": ingreso if ingreso > 0 else perfil.get("ingreso", 0)
+        "ingreso": ingreso if ingreso > 0 else perfil.get("ingreso", 0),
+        "gastos_fijos": round(gastos_fijos)
     }
 
 def check_alerts(perfil, gastos):
@@ -600,7 +602,7 @@ def setup():
     perfil["session_id"]       = session_id
 
     gastos_iniciales = float(data.get("gastos_iniciales") or 0)
-    perfil["gastos_fijos_inicio"] = gastos_iniciales
+    perfil["gastos_fijos_mensuales"] = gastos_iniciales
 
     save_perfil(perfil)
 
