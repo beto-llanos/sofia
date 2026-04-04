@@ -66,7 +66,11 @@
     .sb-user-avatar{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:.85rem;font-weight:700;color:#fff;flex-shrink:0;}
     .sb-user-name{font-size:.85rem;font-weight:700;color:var(--text);}
     .sb-user-mode{font-size:.65rem;color:var(--accent);font-weight:600;margin-top:1px;}
-    .sb-section-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);padding:8px 14px 4px;opacity:.6;}
+    .sb-section-lbl{font-size:.6rem;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--text2);padding:10px 14px 4px;opacity:.8;}
+    .sb-stats-card{margin:0 10px 8px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;overflow:hidden;}
+    .sb-piggy-card{margin:8px 10px 4px;padding:10px 4px 4px;background:var(--surface2);border:1px solid var(--border);border-radius:10px;display:flex;justify-content:center;}
+    .sb-mode-pill{display:inline-flex;align-items:center;gap:4px;padding:2px 8px;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);border-radius:20px;color:var(--accent);font-size:.62rem;font-weight:600;cursor:pointer;transition:.15s;margin-top:3px;}
+    .sb-mode-pill:hover{background:rgba(59,130,246,.22);}
     .sb-nav-item{display:flex;align-items:center;gap:10px;padding:9px 14px;cursor:pointer;transition:.15s;border-radius:0;color:var(--text2);font-size:.85rem;}
     .sb-nav-item:hover{background:var(--surface);color:var(--text);}
     .sb-nav-item.active{background:rgba(59,130,246,.1);color:var(--accent);border-right:2px solid var(--accent);}
@@ -573,10 +577,25 @@
         <div class="cat-chip" data-cat="ropa" onclick="toggleObCat(this)">👕 Ropa</div>
         <div class="cat-chip" data-cat="deudas" onclick="toggleObCat(this)">💳 Deudas</div>
       </div>
-      <button class="ob-cta" onclick="obNext()">Listo, crear mi plan →</button>
+      <button class="ob-cta" onclick="obNext()">Continuar →</button>
     </div>
 
+    <!-- SLIDE 4: Financial goal -->
     <div class="ob-slide" id="slide-4">
+      <span class="ob-emoji">🎯</span>
+      <div class="ob-question">¿Cuál es tu meta financiera?</div>
+      <div class="ob-sub">ALD.IA adaptará sus consejos a lo que quieres lograr. Puedes cambiarla después.</div>
+      <div class="ob-options">
+        <div class="ob-option" onclick="selectOption('meta_tipo','ahorro',this)"><div class="ob-opt-icon">💰</div><div class="ob-opt-text"><div class="ob-opt-title">Ahorrar para algo</div><div class="ob-opt-desc">Viaje, auto, casa u objetivo específico</div></div><div class="ob-check"></div></div>
+        <div class="ob-option" onclick="selectOption('meta_tipo','deudas',this)"><div class="ob-opt-icon">💳</div><div class="ob-opt-text"><div class="ob-opt-title">Salir de deudas</div><div class="ob-opt-desc">Tarjetas, préstamos, créditos</div></div><div class="ob-check"></div></div>
+        <div class="ob-option" onclick="selectOption('meta_tipo','emergencia',this)"><div class="ob-opt-icon">🛡️</div><div class="ob-opt-text"><div class="ob-opt-title">Fondo de emergencia</div><div class="ob-opt-desc">3–6 meses de gastos como colchón</div></div><div class="ob-check"></div></div>
+        <div class="ob-option" onclick="selectOption('meta_tipo','invertir',this)"><div class="ob-opt-icon">📈</div><div class="ob-opt-text"><div class="ob-opt-title">Empezar a invertir</div><div class="ob-opt-desc">Hacer crecer mi dinero a largo plazo</div></div><div class="ob-check"></div></div>
+        <div class="ob-option" onclick="selectOption('meta_tipo','control',this)"><div class="ob-opt-icon">📊</div><div class="ob-opt-text"><div class="ob-opt-title">Solo controlar mis gastos</div><div class="ob-opt-desc">Entender a dónde va mi dinero</div></div><div class="ob-check"></div></div>
+      </div>
+      <button class="ob-cta" id="cta-meta_tipo" onclick="obNext()" disabled>Listo, crear mi plan →</button>
+    </div>
+
+    <div class="ob-slide" id="slide-5">
       <div class="ob-success">
         <div class="ob-success-icon">🎉</div>
         <h2>¡Tu plan está listo!</h2>
@@ -587,7 +606,7 @@
       </div>
     </div>
 
-  </div>
+  </div><!-- /ob-body -->
 </div>
 
 <div id="sb-overlay" onclick="closeSidebar()"></div>
@@ -600,38 +619,40 @@
     <button class="sb-close" onclick="closeSidebar()">✕</button>
   </div>
   <div class="sb-body">
-    <!-- User identity -->
     <div class="sb-user">
       <div class="sb-user-avatar" id="sb-avatar">AL</div>
-      <div><div class="sb-user-name" id="sb-user-name">—</div><div class="sb-user-mode" id="sb-user-mode">Modo personal</div></div>
+      <div>
+        <div class="sb-user-name" id="sb-user-name">—</div>
+        <div class="sb-mode-pill" id="sb-mode-pill" onclick="toggleModeFromSidebar()"><span id="sb-mode-icon">👤</span> <span id="sb-mode-label">Personal</span></div>
+      </div>
     </div>
-    <!-- Live stats -->
-    <div class="sb-stat-row"><span class="sb-stat-lbl">💰 Disponible</span><span class="sb-stat-val" id="sb-disp-val" style="color:var(--green)">—</span></div>
-    <div class="sb-stat-row"><span class="sb-stat-lbl">📅 Día del mes</span><span class="sb-stat-val" id="sb-dia-val">—</span></div>
-    <div class="sb-stat-row"><span class="sb-stat-lbl">🔥 Racha</span><span class="sb-stat-val" id="sb-streak-val" style="color:#fbbf24">0 días</span></div>
-    <div class="sb-stat-row" style="margin-bottom:6px"><span class="sb-stat-lbl">⚡ Ritmo</span><span class="sb-stat-val" id="sb-ritmo-val">—</span></div>
-    <!-- Navigation -->
+    <div class="sb-piggy-card">
+      <div class="piggy-wrap" id="sidebar-piggy"></div>
+    </div>
+    <div class="sb-stats-card">
+      <div class="sb-stat-row"><span class="sb-stat-lbl">💰 Disponible</span><span class="sb-stat-val" id="sb-disp-val" style="color:var(--green)">—</span></div>
+      <div class="sb-stat-row"><span class="sb-stat-lbl">📅 Día del mes</span><span class="sb-stat-val" id="sb-dia-val">—</span></div>
+      <div class="sb-stat-row"><span class="sb-stat-lbl">🔥 Racha</span><span class="sb-stat-val" id="sb-streak-val" style="color:#fbbf24">0 días</span></div>
+      <div class="sb-stat-row" style="padding-bottom:6px"><span class="sb-stat-lbl">⚡ Ritmo</span><span class="sb-stat-val" id="sb-ritmo-val">—</span></div>
+    </div>
     <div class="sb-section-lbl">Navegación</div>
     <div class="sb-nav-item" onclick="closeSidebar();switchMainTab('chat')"><span class="sb-nav-icon">💬</span><span class="t-chat">Chat</span></div>
     <div class="sb-nav-item" onclick="closeSidebar();switchMainTab('panel')"><span class="sb-nav-icon">📊</span><span class="t-dashboard">Dashboard</span></div>
     <div class="sb-nav-item" onclick="closeSidebar();switchMainTab('learn')"><span class="sb-nav-icon">🎮</span><span class="t-learn">Aprende</span><span class="sb-nav-badge" id="sb-xp-badge">XP</span></div>
     <div class="sb-nav-item" onclick="closeSidebar();switchMainTab('store')"><span class="sb-nav-icon">🛍️</span><span class="t-store">Tienda</span></div>
-    <!-- Quick actions -->
     <div class="sb-section-lbl">Acciones rápidas</div>
     <div class="sb-nav-item" onclick="closeSidebar();sendQuick('Como voy este mes?')"><span class="sb-nav-icon">📈</span>¿Cómo voy?</div>
     <div class="sb-nav-item" onclick="closeSidebar();sendQuick('Cuanto puedo gastar hoy sin afectar mi meta?')"><span class="sb-nav-icon">🎯</span>¿Cuánto gastar hoy?</div>
     <div class="sb-nav-item" onclick="closeSidebar();mostrarAlertas()"><span class="sb-nav-icon">🔔</span>Alertas</div>
     <div class="sb-nav-item" onclick="closeSidebar();abrirModal()"><span class="sb-nav-icon">💸</span>¿Lo puedo pagar?</div>
-    <!-- Tools -->
     <div class="sb-section-lbl">Herramientas</div>
     <div class="sb-nav-item" onclick="closeSidebar();mostrarHistorial()"><span class="sb-nav-icon">📋</span>Historial</div>
     <div class="sb-nav-item" onclick="closeSidebar();mostrarGrafica()"><span class="sb-nav-icon">📉</span>Gráfica mensual</div>
     <div class="sb-nav-item" onclick="closeSidebar();abrirConectarBanco()"><span class="sb-nav-icon">🏦</span>Conectar banco</div>
     <div class="sb-nav-item" onclick="closeSidebar();document.getElementById('file-import').click()"><span class="sb-nav-icon">📂</span>Importar estado</div>
     <input type="file" id="file-import" accept=".csv,.pdf" style="display:none" onchange="importarEstado(this)">
-    <!-- Hidden data store for budget JS compatibility -->
     <div style="display:none">
-      <div id="health-panel"></div><div id="sidebar-piggy"></div>
+      <div id="health-panel"></div>
       <div id="score-nivel"></div><div id="score-personalidad"></div><div id="score-num"></div>
       <div id="bi-vivienda"><div id="fillVivienda"></div><span id="amtVivienda"></span></div>
       <div id="bi-comida"><div id="fillComida"></div><span id="amtComida"></span></div>
@@ -963,7 +984,7 @@
       document.getElementById('onboarding').style.display = 'flex';
     }
   }
-  const TOTAL_SLIDES = 4;
+  const TOTAL_SLIDES = 5;
   const LIMITES_BASE = {vivienda:.25,comida:.12,transporte:.12,salud:.08,educacion:.02,ocio:.07,ropa:.08,deudas:.08};
   const PCT_AHORRO = {relajado:.10,equilibrado:.20,agresivo:.35};
   let currentSlide = 0;
@@ -984,9 +1005,9 @@
     document.getElementById('slide-' + currentSlide).classList.remove('active');
     currentSlide = n;
     document.getElementById('slide-' + currentSlide).classList.add('active');
-    const step = Math.max(0, currentSlide - 1);
+    const step = currentSlide;
     const total = TOTAL_SLIDES - 1;
-    document.getElementById('ob-progress').style.width = (step / total * 100) + '%';
+    document.getElementById('ob-progress').style.width = ((step - 1) / total * 100) + '%';
     document.getElementById('ob-step-label').textContent = (currentSlide > 0 && currentSlide < TOTAL_SLIDES) ? 'Paso ' + step + ' de ' + total : '';
     document.getElementById('ob-back').disabled = currentSlide === 0;
     if (currentSlide === TOTAL_SLIDES) { buildSuccessScreen(); generatePlan(); }
@@ -1119,17 +1140,24 @@
   }
 
   function updateSidebarUser() {
-    const name  = answers.nombre || (currentUser ? currentUser.split('@')[0] : '—');
-    const av    = document.getElementById('sb-avatar');
-    const nm    = document.getElementById('sb-user-name');
-    const md    = document.getElementById('sb-user-mode');
-    const xpB   = document.getElementById('sb-xp-badge');
-    const dia   = document.getElementById('sb-dia-val');
+    const name = answers.nombre || (_uf ? _uf.split('@')[0] : '—');
+    const av   = document.getElementById('sb-avatar');
+    const nm   = document.getElementById('sb-user-name');
+    const ml   = document.getElementById('sb-mode-label');
+    const mi   = document.getElementById('sb-mode-icon');
+    const xpB  = document.getElementById('sb-xp-badge');
+    const dia  = document.getElementById('sb-dia-val');
     if (av) av.textContent = name.charAt(0).toUpperCase();
     if (nm) nm.textContent = name;
-    if (md) md.textContent = _mode === 'business' ? '🏢 Modo negocio' : '👤 Modo personal';
+    if (ml) ml.textContent = _mode === 'business' ? 'Negocio' : 'Personal';
+    if (mi) mi.textContent = _mode === 'business' ? '🏢' : '👤';
     if (xpB) xpB.textContent = getXP() + ' XP';
     if (dia) { const h=new Date().getDate(),dm=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate(); dia.textContent=h+'/'+dm; }
+  }
+
+  function toggleModeFromSidebar() {
+    setMode(_mode === 'personal' ? 'business' : 'personal');
+    updateSidebarUser();
   }
 
   function startChat() {
@@ -2140,38 +2168,42 @@
         ${extraDefs}
       </defs>
       <!-- Drop shadow -->
-      <ellipse cx="50" cy="93" rx="28" ry="4" fill="rgba(0,0,0,.15)"/>
-      <!-- Body — wide, squat, like plastic toy -->
-      <ellipse cx="50" cy="56" rx="36" ry="30" fill="${bodyFill}"/>
+      <ellipse cx="50" cy="93" rx="26" ry="3.5" fill="rgba(0,0,0,.14)"/>
+      <!-- Ears (behind body) -->
+      <ellipse cx="23" cy="32" rx="9" ry="11" fill="${bodyFill}" transform="rotate(-15,23,32)"/>
+      <ellipse cx="23" cy="32" rx="5" ry="6.5" fill="${snoutCol}" opacity=".55" transform="rotate(-15,23,32)"/>
+      <ellipse cx="77" cy="32" rx="9" ry="11" fill="${bodyFill}" transform="rotate(15,77,32)"/>
+      <ellipse cx="77" cy="32" rx="5" ry="6.5" fill="${snoutCol}" opacity=".55" transform="rotate(15,77,32)"/>
+      <!-- Body — round -->
+      <ellipse cx="50" cy="55" rx="35" ry="30" fill="${bodyFill}"/>
       <!-- Coin slot -->
-      <rect x="40" y="26" width="20" height="4" rx="2" fill="${darkShade}"/>
-      <!-- Left ear -->
-      <ellipse cx="22" cy="32" rx="8" ry="10" fill="${bodyFill}" transform="rotate(-20,22,32)"/>
-      <ellipse cx="22" cy="32" rx="4.5" ry="6" fill="${snoutCol}" opacity=".6" transform="rotate(-20,22,32)"/>
-      <!-- Right ear -->
-      <ellipse cx="78" cy="32" rx="8" ry="10" fill="${bodyFill}" transform="rotate(20,78,32)"/>
-      <ellipse cx="78" cy="32" rx="4.5" ry="6" fill="${snoutCol}" opacity=".6" transform="rotate(20,78,32)"/>
-      <!-- Big snout (defining feature of plastic piggy) -->
-      <ellipse cx="50" cy="65" rx="18" ry="13" fill="${snoutCol}"/>
-      <ellipse cx="50" cy="63" rx="14" ry="10" fill="${snoutDark}" opacity=".3"/>
+      <rect x="43" y="25" width="14" height="3" rx="1.5" fill="${darkShade}"/>
+      <!-- Snout -->
+      <ellipse cx="50" cy="65" rx="16" ry="12" fill="${snoutCol}"/>
+      <ellipse cx="50" cy="62" rx="12" ry="8" fill="${snoutDark}" opacity=".22"/>
       <!-- Nostrils -->
-      <ellipse cx="44" cy="65" rx="3.5" ry="3" fill="${darkShade}" opacity=".65"/>
-      <ellipse cx="56" cy="65" rx="3.5" ry="3" fill="${darkShade}" opacity=".65"/>
-      <!-- Eyes — small bead style -->
-      <circle cx="36" cy="48" r="5.5" fill="${eyeCol}"/>
-      <circle cx="64" cy="48" r="5.5" fill="${eyeCol}"/>
-      <circle cx="37" cy="47" r="1.8" fill="white"/>
-      <circle cx="65" cy="47" r="1.8" fill="white"/>
+      <ellipse cx="44" cy="66" rx="3" ry="2.5" fill="${darkShade}" opacity=".6"/>
+      <ellipse cx="56" cy="66" rx="3" ry="2.5" fill="${darkShade}" opacity=".6"/>
+      <!-- Eyes — round, expressive -->
+      <circle cx="36" cy="47" r="6" fill="${eyeCol}"/>
+      <circle cx="64" cy="47" r="6" fill="${eyeCol}"/>
+      <circle cx="37.8" cy="45.2" r="2.2" fill="white"/>
+      <circle cx="65.8" cy="45.2" r="2.2" fill="white"/>
+      <!-- Blush -->
+      <ellipse cx="29" cy="57" rx="5" ry="3" fill="${snoutCol}" opacity=".4"/>
+      <ellipse cx="71" cy="57" rx="5" ry="3" fill="${snoutCol}" opacity=".4"/>
+      <!-- Smile -->
+      <path d="M43 59 Q50 64 57 59" fill="none" stroke="${darkShade}" stroke-width="1.5" stroke-linecap="round" opacity=".4"/>
       <!-- Tail -->
-      <path d="M87 52 Q96 46 93 56 Q90 65 97 60" fill="none" stroke="${snoutCol}" stroke-width="3" stroke-linecap="round"/>
-      <!-- Stubby legs — 4, wide and short -->
-      <rect x="20" y="78" width="14" height="14" rx="7" fill="${bodyFill}"/>
-      <rect x="38" y="80" width="13" height="12" rx="6.5" fill="${bodyFill}"/>
-      <rect x="55" y="80" width="13" height="12" rx="6.5" fill="${bodyFill}"/>
-      <rect x="73" y="78" width="14" height="14" rx="7" fill="${bodyFill}"/>
+      <path d="M86 52 Q95 46 92 55 Q89 64 96 59" fill="none" stroke="${snoutCol}" stroke-width="2.5" stroke-linecap="round"/>
+      <!-- Legs -->
+      <rect x="21" y="78" width="14" height="13" rx="7" fill="${bodyFill}"/>
+      <rect x="39" y="80" width="12" height="11" rx="5.5" fill="${bodyFill}"/>
+      <rect x="55" y="80" width="12" height="11" rx="5.5" fill="${bodyFill}"/>
+      <rect x="72" y="78" width="14" height="13" rx="7" fill="${bodyFill}"/>
       <!-- Leg shading -->
-      <rect x="20" y="83" width="14" height="4" rx="2" fill="${darkShade}" opacity=".2"/>
-      <rect x="73" y="83" width="14" height="4" rx="2" fill="${darkShade}" opacity=".2"/>
+      <rect x="21" y="85" width="14" height="4" rx="2" fill="${darkShade}" opacity=".12"/>
+      <rect x="72" y="85" width="14" height="4" rx="2" fill="${darkShade}" opacity=".12"/>
       ${overlay}
     </svg>`;
   }
@@ -2186,7 +2218,7 @@
   }
 
   function renderAllPiggies() {
-    renderPiggy('sidebar-piggy', 70);
+    renderPiggy('sidebar-piggy', 58);
     renderPiggy('panel-piggy', 90);
     renderPiggy('learn-piggy', 58);
     renderPiggy('store-piggy', 80);
