@@ -450,7 +450,7 @@
     .ob-amount-wrap{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.07);border:1.5px solid var(--border);border-radius:14px;padding:12px 16px;width:100%;max-width:380px;margin-bottom:8px;}
     .ob-currency{font-size:1.6rem;font-weight:700;color:var(--text2);}
     .ob-amount-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:1.6rem;font-weight:700;font-family:inherit;min-width:0;}
-    .ob-amount-hint{font-size:.8rem;color:var(--text2);margin-bottom:18px;min-height:16px;}
+    .ob-amount-hint{font-size:.8rem;color:var(--text2);margin-top:8px;margin-bottom:18px;min-height:16px;}
     .ob-options{display:flex;flex-direction:column;gap:10px;width:100%;max-width:380px;margin-bottom:18px;}
     .ob-option{display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:14px;cursor:pointer;transition:.15s;text-align:left;}
     .ob-option:hover{border-color:var(--accent);background:rgba(59,130,246,.08);}
@@ -1060,7 +1060,7 @@
   }
 
   function selectOption(key, value, el) {
-    el.closest('.ob-options').querySelectorAll('.ob-option').forEach(o => o.classList.remove('selected'));
+    el.closest('.ob-options').querySelectorAll('.ob-option').forEach(o => { o.classList.remove('selected'); o.querySelector('.ob-check').innerHTML = ''; });
     el.classList.add('selected');
     el.querySelector('.ob-check').innerHTML = '✓';
     answers[key] = value;
@@ -1252,7 +1252,8 @@
       if (fillD) { fillD.style.width = '100%'; fillD.style.background = 'var(--green)'; }
       if (amtD)  { amtD.textContent = '$' + ingresoRef.toLocaleString('es-MX'); amtD.style.color = 'var(--green)'; }
       const dispC = document.getElementById('disp-compact');
-      if (dispC) { dispC.textContent = '$' + ingresoRef.toLocaleString('es-MX'); dispC.style.color = 'var(--green)'; }
+      const dispInicial = Math.max(0, ingresoRef - (answers.gastos_iniciales || 0));
+      if (dispC) { dispC.textContent = '$' + dispInicial.toLocaleString('es-MX'); dispC.style.color = dispInicial > ingresoRef * 0.2 ? 'var(--green)' : 'var(--red)'; }
     }
 
     // Calcular ahorro real segun disponibilidad
