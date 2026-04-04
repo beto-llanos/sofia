@@ -599,6 +599,17 @@ def setup():
     perfil["session_id"]       = session_id
 
     save_perfil(perfil)
+
+    # Register pre-existing monthly expenses as a bulk gasto entry
+    gastos_iniciales = float(data.get("gastos_iniciales") or 0)
+    if gastos_iniciales > 0:
+        sb.table("gastos").insert({
+            "session_id": session_id,
+            "categoria": "imprevistos",
+            "monto": gastos_iniciales,
+            "descripcion": "Gastos fijos del mes previos al registro"
+        }).execute()
+
     return jsonify({"status": "ok"})
 
 @app.route("/api/generar-plan", methods=["POST"])

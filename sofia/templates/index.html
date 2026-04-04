@@ -346,7 +346,14 @@
     .quiz-result-icon{font-size:2.5rem;}
     .quiz-result-xp{font-size:1.1rem;font-weight:800;color:var(--accent);}
     /* ── Store panel ── */
-    .store-xp{display:flex;align-items:center;gap:6px;font-size:.88rem;font-weight:700;color:var(--accent);padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:10px;}
+    .store-xp{display:flex;align-items:center;gap:6px;font-size:.88rem;font-weight:700;color:var(--accent);padding:10px 14px;background:var(--surface);border:1px solid var(--border);border-radius:10px;margin-bottom:8px;}
+    .xp-level-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:12px 14px;margin-bottom:10px;}
+    .xp-level-bar-track{height:8px;background:rgba(255,255,255,.08);border-radius:4px;overflow:hidden;margin:8px 0 6px;}
+    .xp-level-bar-fill{height:100%;background:linear-gradient(90deg,var(--accent),#a78bfa);border-radius:4px;transition:width .6s;}
+    .xp-level-header{display:flex;justify-content:space-between;align-items:center;font-size:.78rem;}
+    .xp-level-title{font-weight:700;color:var(--text);}
+    .xp-level-count{color:var(--text2);}
+    .xp-level-reward{font-size:.73rem;color:var(--text2);margin-top:2px;}
     .store-section{margin-bottom:14px;}
     .store-section-title{font-size:.72rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:8px;}
     .store-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
@@ -416,43 +423,43 @@
     .admin-crown{background:linear-gradient(135deg,#581c87,#7e22ce);color:white;border:none;border-radius:12px;padding:14px;font-size:14px;font-weight:700;cursor:pointer;width:100%;display:flex;align-items:center;justify-content:center;gap:8px;transition:.2s;}
     .admin-crown:hover{opacity:.85;}
     /* ── Onboarding ── */
-    #onboarding{position:fixed;inset:0;z-index:100;background:var(--bg);overflow:hidden;}
-    .ob-header{padding:14px 20px 0;display:flex;align-items:center;gap:12px;flex-shrink:0;}
+    #onboarding{position:fixed;inset:0;z-index:100;background:var(--bg);overflow:hidden;display:none;flex-direction:column;}
+    .ob-header{padding:16px 20px 0;display:flex;align-items:center;gap:12px;flex-shrink:0;}
     .ob-back{background:none;border:none;color:var(--text2);font-size:1.2rem;cursor:pointer;padding:4px 8px;border-radius:8px;}
     .ob-progress-wrap{flex:1;}
-    .ob-step-label{font-size:.7rem;color:var(--text2);margin-bottom:4px;}
-    .ob-progress-track{height:4px;background:var(--surface2);border-radius:2px;}
-    .ob-progress-fill{height:100%;background:var(--accent);border-radius:2px;transition:width .3s;}
+    .ob-step-label{font-size:.72rem;color:var(--text2);margin-bottom:5px;font-weight:500;}
+    .ob-progress-track{height:5px;background:var(--surface2);border-radius:3px;}
+    .ob-progress-fill{height:100%;background:var(--accent);border-radius:3px;transition:width .3s;}
     .ob-body{flex:1;overflow-y:auto;display:flex;flex-direction:column;}
-    .ob-slide{display:none;flex-direction:column;align-items:center;padding:28px 24px 32px;text-align:center;min-height:100%;}
+    .ob-slide{flex:1;display:none;flex-direction:column;align-items:center;justify-content:center;padding:32px 28px 40px;text-align:center;}
     .ob-slide.active{display:flex;}
-    .ob-welcome{display:flex;flex-direction:column;align-items:center;gap:12px;max-width:340px;}
+    .ob-welcome{display:flex;flex-direction:column;align-items:center;gap:14px;max-width:380px;width:100%;}
     .ob-logo{display:block;}
-    .ob-welcome h1{font-size:2rem;font-weight:900;line-height:1.15;}
+    .ob-welcome h1{font-size:2.4rem;font-weight:900;line-height:1.1;}
     .ob-welcome h1 span{background:linear-gradient(135deg,#10b981,#3b82f6);-webkit-background-clip:text;-webkit-text-fill-color:transparent;}
-    .ob-welcome p{color:var(--text2);font-size:.92rem;line-height:1.55;max-width:300px;}
-    .ob-features{display:flex;flex-direction:column;gap:8px;text-align:left;width:100%;}
-    .ob-feature{display:flex;align-items:flex-start;gap:10px;font-size:.85rem;color:var(--text2);}
-    .ob-feature-icon{font-size:1.1rem;flex-shrink:0;margin-top:1px;}
-    .ob-cta{width:100%;max-width:320px;padding:14px;border-radius:12px;border:none;background:var(--accent);color:#fff;font-size:1rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;margin-top:8px;}
+    .ob-welcome p{color:var(--text2);font-size:.95rem;line-height:1.6;max-width:320px;}
+    .ob-features{display:flex;flex-direction:column;gap:10px;text-align:left;width:100%;}
+    .ob-feature{display:flex;align-items:flex-start;gap:12px;font-size:.88rem;color:var(--text2);background:rgba(255,255,255,.04);border:1px solid var(--border);border-radius:10px;padding:10px 12px;}
+    .ob-feature-icon{font-size:1.2rem;flex-shrink:0;}
+    .ob-cta{width:100%;max-width:380px;padding:16px;border-radius:14px;border:none;background:var(--accent);color:#fff;font-size:1.05rem;font-weight:700;cursor:pointer;font-family:inherit;transition:.2s;margin-top:10px;}
     .ob-cta:hover{opacity:.85;}
-    .ob-cta:disabled{opacity:.4;cursor:not-allowed;}
-    .ob-emoji{font-size:2.8rem;margin-bottom:6px;}
-    .ob-question{font-size:1.3rem;font-weight:800;margin-bottom:6px;line-height:1.2;}
-    .ob-sub{color:var(--text2);font-size:.88rem;margin-bottom:20px;line-height:1.5;max-width:300px;}
-    .ob-amount-wrap{display:flex;align-items:center;gap:8px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:10px 14px;width:100%;max-width:320px;margin-bottom:8px;}
-    .ob-currency{font-size:1.4rem;font-weight:700;color:var(--text2);}
-    .ob-amount-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:1.4rem;font-weight:700;font-family:inherit;min-width:0;}
-    .ob-amount-hint{font-size:.78rem;color:var(--text2);margin-bottom:16px;min-height:16px;}
-    .ob-options{display:flex;flex-direction:column;gap:8px;width:100%;max-width:320px;margin-bottom:16px;}
-    .ob-option{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--surface2);border:1px solid var(--border);border-radius:12px;cursor:pointer;transition:.15s;text-align:left;}
-    .ob-option:hover{border-color:var(--accent);}
-    .ob-option.selected{border-color:var(--accent);background:rgba(59,130,246,.1);}
-    .ob-opt-icon{font-size:1.4rem;flex-shrink:0;}
+    .ob-cta:disabled{opacity:.35;cursor:not-allowed;}
+    .ob-emoji{font-size:3.2rem;margin-bottom:8px;}
+    .ob-question{font-size:1.55rem;font-weight:800;margin-bottom:8px;line-height:1.2;}
+    .ob-sub{color:var(--text2);font-size:.92rem;margin-bottom:22px;line-height:1.55;max-width:340px;}
+    .ob-amount-wrap{display:flex;align-items:center;gap:10px;background:rgba(255,255,255,.07);border:1.5px solid var(--border);border-radius:14px;padding:12px 16px;width:100%;max-width:380px;margin-bottom:8px;}
+    .ob-currency{font-size:1.6rem;font-weight:700;color:var(--text2);}
+    .ob-amount-input{flex:1;background:none;border:none;outline:none;color:var(--text);font-size:1.6rem;font-weight:700;font-family:inherit;min-width:0;}
+    .ob-amount-hint{font-size:.8rem;color:var(--text2);margin-bottom:18px;min-height:16px;}
+    .ob-options{display:flex;flex-direction:column;gap:10px;width:100%;max-width:380px;margin-bottom:18px;}
+    .ob-option{display:flex;align-items:center;gap:14px;padding:14px 16px;background:rgba(255,255,255,.06);border:1.5px solid rgba(255,255,255,.12);border-radius:14px;cursor:pointer;transition:.15s;text-align:left;}
+    .ob-option:hover{border-color:var(--accent);background:rgba(59,130,246,.08);}
+    .ob-option.selected{border-color:var(--accent);background:rgba(59,130,246,.12);}
+    .ob-opt-icon{font-size:1.6rem;flex-shrink:0;}
     .ob-opt-text{flex:1;}
-    .ob-opt-title{font-size:.88rem;font-weight:700;color:var(--text);}
-    .ob-opt-desc{font-size:.74rem;color:var(--text2);margin-top:2px;}
-    .ob-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--border);display:flex;align-items:center;justify-content:center;font-size:.7rem;color:var(--accent);flex-shrink:0;}
+    .ob-opt-title{font-size:.92rem;font-weight:700;color:var(--text);}
+    .ob-opt-desc{font-size:.76rem;color:var(--text2);margin-top:3px;}
+    .ob-check{width:22px;height:22px;border-radius:50%;border:2px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;font-size:.75rem;color:var(--accent);flex-shrink:0;}
     .ob-option.selected .ob-check{border-color:var(--accent);background:var(--accent);color:#fff;}
     .ob-success{display:flex;flex-direction:column;align-items:center;gap:14px;max-width:340px;}
     .ob-success-icon{font-size:3rem;}
@@ -560,8 +567,28 @@
       <button class="ob-cta" id="cta-ingreso" onclick="obNext()" disabled>Continuar →</button>
     </div>
 
-    <!-- SLIDE 2: Account type -->
+    <!-- SLIDE 2: Starting expenses -->
     <div class="ob-slide" id="slide-2">
+      <span class="ob-emoji">📊</span>
+      <div class="ob-question">¿Ya tienes gastos del mes?</div>
+      <div class="ob-sub">Renta, servicios, o cualquier gasto fijo que ya pagaste. Así tu disponible refleja la realidad.</div>
+      <div class="ob-options">
+        <div class="ob-option" onclick="selectGastosInicio('cero',this)"><div class="ob-opt-icon">✅</div><div class="ob-opt-text"><div class="ob-opt-title">Empiezo de cero</div><div class="ob-opt-desc">Aún no he gastado nada este mes</div></div><div class="ob-check"></div></div>
+        <div class="ob-option" onclick="selectGastosInicio('gaste',this)"><div class="ob-opt-icon">💸</div><div class="ob-opt-text"><div class="ob-opt-title">Ya tengo gastos</div><div class="ob-opt-desc">Renta, servicios u otros gastos fijos ya pagados</div></div><div class="ob-check"></div></div>
+      </div>
+      <div id="gastos-iniciales-wrap" style="display:none;width:100%;max-width:380px">
+        <div class="ob-amount-wrap">
+          <span class="ob-currency">$</span>
+          <input type="number" class="ob-amount-input" id="input-gastos" placeholder="0" inputmode="numeric" oninput="validateGastosIniciales()">
+          <span style="font-size:13px;color:var(--text2);flex-shrink:0">MXN</span>
+        </div>
+        <div class="ob-amount-hint">Total aproximado de gastos fijos ya pagados</div>
+      </div>
+      <button class="ob-cta" id="cta-gastos_inicio" onclick="obNext()" disabled>Continuar →</button>
+    </div>
+
+    <!-- SLIDE 3: Account type -->
+    <div class="ob-slide" id="slide-3">
       <span class="ob-emoji">🧭</span>
       <div class="ob-question">¿Para qué usarás ALD.IA?</div>
       <div class="ob-sub">Puedes usar los dos modos con la misma cuenta.</div>
@@ -573,8 +600,8 @@
       <button class="ob-cta" id="cta-account_type" onclick="obNext()" disabled>Continuar →</button>
     </div>
 
-    <!-- SLIDE 3: Quick categories (chips) -->
-    <div class="ob-slide" id="slide-3">
+    <!-- SLIDE 4: Quick categories (chips) -->
+    <div class="ob-slide" id="slide-4">
       <span class="ob-emoji">🏷️</span>
       <div class="ob-question">¿Qué gastos tienes?</div>
       <div class="ob-sub">Toca los que apliquen. Solo los seleccionados formarán tu presupuesto.</div>
@@ -591,8 +618,8 @@
       <button class="ob-cta" onclick="obNext()">Continuar →</button>
     </div>
 
-    <!-- SLIDE 4: Financial goal -->
-    <div class="ob-slide" id="slide-4">
+    <!-- SLIDE 5: Financial goal -->
+    <div class="ob-slide" id="slide-5">
       <span class="ob-emoji">🎯</span>
       <div class="ob-question">¿Cuál es tu meta financiera?</div>
       <div class="ob-sub">ALD.IA adaptará sus consejos a lo que quieres lograr. Puedes cambiarla después.</div>
@@ -606,7 +633,7 @@
       <button class="ob-cta" id="cta-meta_tipo" onclick="obNext()" disabled>Listo, crear mi plan →</button>
     </div>
 
-    <div class="ob-slide" id="slide-5">
+    <div class="ob-slide" id="slide-6">
       <div class="ob-success">
         <div class="ob-success-icon">🎉</div>
         <h2>¡Tu plan está listo!</h2>
@@ -793,7 +820,15 @@
 
   <!-- Store Panel -->
   <div class="store-panel" id="store-panel">
-    <div class="store-xp"><span>⭐</span> <span id="store-xp-val">0</span> XP disponibles</div>
+    <div class="store-xp"><span>⭐</span> <span id="store-xp-val">0</span> XP acumulados</div>
+    <div class="xp-level-card">
+      <div class="xp-level-header">
+        <span class="xp-level-title">Nivel <span id="xp-lv-display">1</span></span>
+        <span class="xp-level-count"><span id="xp-cur-display">0</span> / 1000 XP</span>
+      </div>
+      <div class="xp-level-bar-track"><div class="xp-level-bar-fill" id="xp-level-fill" style="width:0%"></div></div>
+      <div class="xp-level-reward">🎁 Al llegar a 1000 XP → tu cerdito <strong>sube de nivel</strong>, crece y desbloqueas una nueva skin</div>
+    </div>
     <div class="panel-card" style="margin-bottom:12px">
       <div class="panel-card-title">🐷 Tu Cerdito</div>
       <div style="display:flex;justify-content:center"><div class="piggy-wrap" id="store-piggy"></div></div>
@@ -995,7 +1030,7 @@
       document.getElementById('onboarding').style.display = 'flex';
     }
   }
-  const TOTAL_SLIDES = 5;
+  const TOTAL_SLIDES = 6;
   const LIMITES_BASE = {vivienda:.25,comida:.12,transporte:.12,salud:.08,educacion:.02,ocio:.07,ropa:.08,deudas:.08};
   const PCT_AHORRO = {relajado:.10,equilibrado:.20,agresivo:.35};
   let currentSlide = 0;
@@ -1080,6 +1115,29 @@
       hint.style.color = 'var(--muted)';
       hint.textContent = 'Tu meta de ahorro o compra';
     }
+  }
+
+  function selectGastosInicio(tipo, el) {
+    el.closest('.ob-options').querySelectorAll('.ob-option').forEach(o => { o.classList.remove('selected'); o.querySelector('.ob-check').innerHTML = ''; });
+    el.classList.add('selected');
+    el.querySelector('.ob-check').innerHTML = '✓';
+    const wrap = document.getElementById('gastos-iniciales-wrap');
+    const cta  = document.getElementById('cta-gastos_inicio');
+    if (tipo === 'cero') {
+      answers.gastos_iniciales = 0;
+      if (wrap) wrap.style.display = 'none';
+      cta.disabled = false;
+    } else {
+      if (wrap) wrap.style.display = '';
+      answers.gastos_iniciales = null;
+      cta.disabled = true;
+    }
+  }
+
+  function validateGastosIniciales() {
+    const val = parseFloat(document.getElementById('input-gastos').value) || 0;
+    answers.gastos_iniciales = val;
+    document.getElementById('cta-gastos_inicio').disabled = (val <= 0);
   }
 
   function selectAccountType(type, el) {
@@ -2098,9 +2156,9 @@
   // PIGGY BANK
   // ════════════════════════════════════════════════════════════
   const SKINS_DATA = [
-    { id:'pink',    name:'Clásico Rosa', price:0,    color:'#f472b6' },
-    { id:'blue',    name:'Azul',         price:150,  color:'#60a5fa' },
-    { id:'green',   name:'Verde',        price:150,  color:'#4ade80' },
+    { id:'pink',    name:'Clásico Rosa', price:0,    color:'#f472b6', light:'#fce7f3' },
+    { id:'blue',    name:'Azul',         price:150,  color:'#60a5fa', light:'#dbeafe' },
+    { id:'green',   name:'Verde',        price:150,  color:'#4ade80', light:'#dcfce7' },
     { id:'gold',    name:'✨ Dorado',    price:400,  color:'#fbbf24', premium:true },
     { id:'crystal', name:'💠 Cristal',   price:700,  color:'#a5f3fc', premium:true },
     { id:'rainbow', name:'🌈 Arcoíris',  price:1000, color:'url(#pig-rlg)', premium:true }
@@ -2158,9 +2216,10 @@
         <circle cx="28" cy="30" r="2.5" fill="white" opacity=".85"/>
         <circle cx="25" cy="28" r="1" fill="white" opacity=".7"/>`;
     } else {
+      const lightCenter = skinData.light || baseColor;
       extraDefs = `
         <radialGradient id="m-body" cx="35%" cy="28%" r="70%">
-          <stop offset="0%" stop-color="rgba(255,255,255,.35)"/><stop offset="100%" stop-color="${baseColor}"/>
+          <stop offset="0%" stop-color="${lightCenter}"/><stop offset="100%" stop-color="${baseColor}"/>
         </radialGradient>`;
       bodyFill = isRainbow ? baseColor : 'url(#m-body)';
     }
@@ -2657,8 +2716,15 @@
 
   function renderStorePanel() {
     renderPiggy('store-piggy', 80);
+    const total = getTotalXP(), cur = getXP(), lv = getLevel();
     const xpEl = document.getElementById('store-xp-val');
-    if (xpEl) xpEl.textContent = getTotalXP();
+    if (xpEl) xpEl.textContent = total;
+    const lvEl = document.getElementById('xp-lv-display');
+    const curEl = document.getElementById('xp-cur-display');
+    const fillEl = document.getElementById('xp-level-fill');
+    if (lvEl) lvEl.textContent = lv;
+    if (curEl) curEl.textContent = cur;
+    if (fillEl) fillEl.style.width = (cur / 10) + '%';
     const owned = getOwned(), curTheme = getTheme(), curSkin = getSkin(), total = getTotalXP();
 
     const tEl = document.getElementById('store-themes');
