@@ -365,11 +365,12 @@ def get_system_prompt(perfil, gastos):
     elif meta_tipo == 'invertir':
         meta_tipo_rule = "\n- OBJETIVO DEL USUARIO: empezar a invertir. Menciona instrumentos de bajo riesgo (CETES, fondos indexados) cuando haya superávit."
 
+    gastos_fijos_inicio = perfil.get("gastos_fijos_inicio", 0)
     contexto = f"""PERFIL DEL USUARIO{nombre_str}:
 - Ingreso mensual: ${ingreso:,.0f} pesos
 - Meta: ${meta:,.0f} pesos en {plazo} meses
 - Objetivo financiero: {meta_tipo_str}
-- Total gastado este mes: ${total_gastado:,.0f} pesos
+{f"- Gastos fijos previos al registro (ya descontados): ${gastos_fijos_inicio:,.0f} pesos — NO los trates como gasto nuevo ni alarma" if gastos_fijos_inicio > 0 else ""}- Total gastado este mes: ${total_gastado:,.0f} pesos
 - Disponible real: ${disponible:,.0f} pesos
 - Dia {dia} de {dias_mes} ({dias_restantes} dias restantes)
 - Tasa de gasto diaria: ${tasa_diaria:,.0f}/dia
@@ -451,7 +452,7 @@ def calculate_budget_data(perfil, gastos):
     meta = perfil.get("meta", 0)
     if ingreso == 0:
         return None
-    total_gastado = sum(gastos.values())
+    total_gastado = sum(gastos.values()) + perfil.get("gastos_fijos_inicio", 0)
     disponible = max(0, ingreso - total_gastado)
 
     def pct(cat):
@@ -598,17 +599,10 @@ def setup():
     perfil["onboarding_done"]  = True
     perfil["session_id"]       = session_id
 
-    save_perfil(perfil)
-
-    # Register pre-existing monthly expenses as a bulk gasto entry
     gastos_iniciales = float(data.get("gastos_iniciales") or 0)
-    if gastos_iniciales > 0:
-        sb.table("gastos").insert({
-            "session_id": session_id,
-            "categoria": "imprevistos",
-            "monto": gastos_iniciales,
-            "descripcion": "Gastos fijos del mes previos al registro"
-        }).execute()
+    perfil["gastos_fijos_inicio"] = gastos_iniciales
+
+    save_perfil(perfil)
 
     return jsonify({"status": "ok"})
 
