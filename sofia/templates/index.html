@@ -702,7 +702,16 @@
       <div class="sb-stat-row"><span class="sb-stat-lbl">💰 Disponible</span><span class="sb-stat-val" id="sb-disp-val" style="color:var(--green)">—</span></div>
       <div class="sb-stat-row"><span class="sb-stat-lbl">📅 Día del mes</span><span class="sb-stat-val" id="sb-dia-val">—</span></div>
       <div class="sb-stat-row"><span class="sb-stat-lbl">🔥 Racha</span><span class="sb-stat-val" id="sb-streak-val" style="color:#fbbf24">0 días</span></div>
-      <div class="sb-stat-row" style="padding-bottom:6px"><span class="sb-stat-lbl">⚡ Ritmo</span><span class="sb-stat-val" id="sb-ritmo-val">—</span></div>
+      <div class="sb-stat-row" style="padding-bottom:4px"><span class="sb-stat-lbl">⚡ Ritmo</span><span class="sb-stat-val" id="sb-ritmo-val">—</span></div>
+      <div style="padding:4px 14px 8px;display:flex;flex-direction:column;gap:4px">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <span class="sb-stat-lbl" id="sb-xp-lbl">XP</span>
+          <span class="sb-stat-val" id="sb-xp-val" style="font-size:.7rem">0 / 1000</span>
+        </div>
+        <div style="height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden">
+          <div id="sb-xp-fill" style="height:100%;background:linear-gradient(90deg,#7c3aed,#3b82f6,#10b981);border-radius:3px;width:0%;transition:width .6s"></div>
+        </div>
+      </div>
     </div>
     <div class="sb-section-lbl">Navegación</div>
     <div class="sb-nav-item" onclick="closeSidebar();switchMainTab('chat')"><span class="sb-nav-icon">💬</span><span class="t-chat">Chat</span></div>
@@ -855,7 +864,7 @@
     <div class="xp-level-card">
       <div class="xp-level-header">
         <span class="xp-level-title">Nivel <span id="xp-lv-display">1</span></span>
-        <span class="xp-level-count"><span id="xp-cur-display">0</span> / 1000 XP</span>
+        <span class="xp-level-count" id="xp-level-count-el"><span id="xp-cur-display">0</span> / 1000 XP</span>
       </div>
       <div class="xp-level-bar-track"><div class="xp-level-bar-fill" id="xp-level-fill" style="width:0%"></div></div>
       <div class="xp-level-reward">🎁 Al llegar a 1000 XP → tu cerdito <strong>sube de nivel</strong>, crece y desbloqueas una nueva skin</div>
@@ -1253,6 +1262,7 @@
     if (mi) mi.textContent = _mode === 'business' ? '🏢' : '👤';
     if (xpB) xpB.innerHTML = xpIcon(12) + ' ' + getXP();
     if (dia) { const h=new Date().getDate(),dm=new Date(new Date().getFullYear(),new Date().getMonth()+1,0).getDate(); dia.textContent=h+'/'+dm; }
+    updateSidebarXP();
   }
 
   function toggleModeFromSidebar() {
@@ -2174,12 +2184,25 @@
   const getLessonsDone = () => JSON.parse(localStorage.getItem(_K.done) || '[]');
   const getStreak  = () => parseInt(localStorage.getItem(_K.streak) || '0');
 
+  function updateSidebarXP() {
+    const xp = getXP(), lv = getLevel();
+    const lbl = document.getElementById('sb-xp-lbl');
+    const val = document.getElementById('sb-xp-val');
+    const fill = document.getElementById('sb-xp-fill');
+    const badge = document.getElementById('sb-xp-badge');
+    if (lbl) lbl.innerHTML = xpIcon(12) + ' XP · Nv.' + lv;
+    if (val) val.textContent = xp + ' / 1000';
+    if (fill) fill.style.width = (xp / 10) + '%';
+    if (badge) badge.innerHTML = xpIcon(12) + ' ' + xp;
+  }
+
   function addXP(amount, reason) {
     let xp = getXP() + amount;
     let lv = getLevel();
     if (xp >= 1000) { xp -= 1000; lv++; localStorage.setItem(_K.lv, lv); triggerPiggyExplosion(lv); }
     localStorage.setItem(_K.xp, xp);
     renderAllPiggies();
+    updateSidebarXP();
     showXPToast(xpIcon(14) + ' +' + amount + ' XP ' + (reason || ''));
     const el = document.getElementById('store-xp-val');
     if (el) el.textContent = xp + (lv - 1) * 1000;
@@ -2327,7 +2350,7 @@
     const xp = getXP(), lv = getLevel();
     el.innerHTML = piggyHTML(size)
       + (showXP ? `<div class="piggy-xp-bar" style="max-width:${size}px"><div class="piggy-xp-fill" style="width:${xp/10}%"></div></div>`
-                + `<div class="piggy-info"><div class="piggy-xp-text">${xp}/1000 XP</div><div class="piggy-level-text">Nivel ${lv}</div></div>` : '');
+                + `<div class="piggy-info"><div class="piggy-xp-text">${xpIcon(11)} ${xp}/1000 XP</div><div class="piggy-level-text">Nivel ${lv}</div></div>` : '');
   }
 
   function renderAllPiggies() {
@@ -2835,7 +2858,9 @@
     const curEl = document.getElementById('xp-cur-display');
     const fillEl = document.getElementById('xp-level-fill');
     if (lvEl) lvEl.textContent = lv;
-    if (curEl) curEl.textContent = cur;
+    if (curEl) curEl.innerHTML = xpIcon(13) + ' ' + cur;
+    const xpLvCount = document.getElementById('xp-level-count-el');
+    if (xpLvCount) xpLvCount.innerHTML = xpIcon(13) + ' ' + cur + ' / 1000 XP';
     if (fillEl) fillEl.style.width = (cur / 10) + '%';
     const owned = getOwned(), curTheme = getTheme(), curSkin = getSkin();
 
