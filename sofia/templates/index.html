@@ -318,15 +318,33 @@
     .streak-badges{display:flex;gap:4px;margin-top:4px;}
     .streak-badge{font-size:.58rem;padding:2px 6px;border-radius:4px;background:var(--surface);border:1px solid var(--border);color:var(--text2);}
     .streak-badge.earned{border-color:var(--green);color:var(--green);}
-    .lesson-card{background:var(--surface2);border:1px solid var(--border);border-radius:12px;padding:14px 16px;cursor:pointer;transition:.2s;display:flex;align-items:center;gap:12px;}
-    .lesson-card:hover{border-color:var(--accent);transform:translateY(-1px);}
-    .lesson-card.completed{border-color:var(--green);opacity:.8;}
-    .lesson-icon{font-size:1.4rem;flex-shrink:0;}
-    .lesson-info{flex:1;}
-    .lesson-title{font-size:.85rem;font-weight:700;margin-bottom:2px;}
-    .lesson-sub{font-size:.7rem;color:var(--text2);}
-    .lesson-xp{font-size:.7rem;font-weight:700;color:var(--accent);flex-shrink:0;}
-    .lesson-done{color:var(--green);font-size:1rem;}
+    /* ── Learning Path cards ── */
+    .path-header{margin-bottom:4px;}
+    .path-title{font-size:1.1rem;font-weight:800;color:var(--text);}
+    .path-sub{font-size:.72rem;color:var(--text2);margin-top:2px;}
+    .path-tabs{display:flex;gap:6px;margin:12px 0 16px;}
+    .path-tab{padding:6px 18px;border-radius:20px;font-size:.75rem;font-weight:600;border:1px solid var(--border);background:none;color:var(--text2);cursor:pointer;transition:.15s;}
+    .path-tab.active{background:var(--accent);color:#000;border-color:var(--accent);}
+    .path-timeline{display:flex;flex-direction:column;}
+    .path-step{display:flex;gap:10px;align-items:stretch;}
+    .path-connector{display:flex;flex-direction:column;align-items:center;width:30px;flex-shrink:0;padding-top:2px;}
+    .path-bullet{width:28px;height:28px;border-radius:50%;background:var(--accent);color:#000;font-size:.72rem;font-weight:800;display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+    .path-bullet.done{background:var(--green);}
+    .path-line{width:2px;flex:1;min-height:14px;background:var(--border);}
+    .path-card-wrap{flex:1;margin-bottom:14px;}
+    .path-card{background:var(--surface2);border:1px solid var(--border);border-radius:14px;padding:14px 15px;}
+    .path-card.completed{border-color:rgba(74,222,128,.35);}
+    .path-card-top{display:flex;justify-content:space-between;align-items:flex-start;gap:8px;}
+    .path-card-title{font-size:.9rem;font-weight:800;color:var(--text);display:flex;align-items:center;gap:6px;flex:1;}
+    .path-card-xp{font-size:.7rem;font-weight:700;color:var(--accent);white-space:nowrap;display:flex;align-items:center;gap:2px;}
+    .path-divider{height:1px;background:var(--border);margin:8px 0;}
+    .path-card-meta{display:flex;justify-content:space-between;font-size:.7rem;color:var(--text2);margin-bottom:6px;}
+    .path-card-prog-track{height:5px;background:rgba(255,255,255,.08);border-radius:3px;overflow:hidden;margin-bottom:10px;}
+    .path-card-prog-fill{height:100%;border-radius:3px;transition:width .5s;}
+    .path-card-btns{display:flex;gap:8px;}
+    .path-btn-view{padding:7px 16px;border-radius:20px;border:1px solid var(--border);background:none;color:var(--text2);font-size:.75rem;font-weight:600;cursor:pointer;white-space:nowrap;}
+    .path-btn-start{flex:1;padding:7px;border-radius:20px;border:none;background:var(--accent);color:#000;font-size:.75rem;font-weight:700;cursor:pointer;}
+    .path-btn-start.done{background:var(--green);}
     .quiz-view{display:none;flex-direction:column;gap:14px;}
     .quiz-view.active{display:flex;}
     .quiz-header{display:flex;align-items:center;gap:10px;margin-bottom:4px;}
@@ -2643,23 +2661,66 @@
       ]}
   ];
 
-  let _curLesson = null, _quizStep = 0, _quizScore = 0;
+  let _curLesson = null, _quizStep = 0, _quizScore = 0, _learnTab = 'pendientes';
 
   function renderLearnPanel() {
     renderStreakCard();
-    renderPiggy('learn-piggy', 58);
     const done = getLessonsDone();
     const listEl = document.getElementById('lessons-list');
     if (!listEl) return;
-    listEl.innerHTML = LESSONS.map(l => `
-      <div class="lesson-card ${done.includes(l.id)?'completed':''}" onclick="startLesson('${l.id}')">
-        <div class="lesson-icon">${l.icon}</div>
-        <div class="lesson-info">
-          <div class="lesson-title">${l.title}</div>
-          <div class="lesson-sub">${l.questions.length} preguntas · ${l.xp} XP</div>
-        </div>
-        ${done.includes(l.id) ? '<div class="lesson-done">✅</div>' : '<div class="lesson-xp">+'+l.xp+' XP</div>'}
-      </div>`).join('');
+
+    const pending   = LESSONS.filter(l => !done.includes(l.id));
+    const completed = LESSONS.filter(l =>  done.includes(l.id));
+    const toShow    = _learnTab === 'completadas' ? completed : pending;
+
+    listEl.innerHTML = `
+      <div class="path-header">
+        <div class="path-title">🎓 Escuelita</div>
+        <div class="path-sub">Trayectoria de aprendizaje</div>
+      </div>
+      <div class="path-tabs">
+        <button class="path-tab ${_learnTab==='pendientes'?'active':''}" onclick="_learnTab='pendientes';renderLearnPanel()">Clases${pending.length?' ('+pending.length+')':''}</button>
+        <button class="path-tab ${_learnTab==='completadas'?'active':''}" onclick="_learnTab='completadas';renderLearnPanel()">Completadas${completed.length?' ('+completed.length+')':''}</button>
+      </div>
+      <div class="path-timeline">
+        ${toShow.length === 0
+          ? `<div style="text-align:center;padding:32px 16px;color:var(--text2);font-size:.82rem">${_learnTab==='completadas'?'Aún no has completado ninguna lección.':'¡Completaste todas las lecciones! 🎉'}</div>`
+          : toShow.map((l, i) => {
+              const isDone = done.includes(l.id);
+              const nQs = l.questions.length;
+              const modDone = isDone ? nQs : 0;
+              const prog = isDone ? 100 : 0;
+              const isLast = i === toShow.length - 1;
+              return `<div class="path-step">
+                <div class="path-connector">
+                  <div class="path-bullet ${isDone?'done':''}">${i+1}</div>
+                  ${!isLast ? '<div class="path-line"></div>' : ''}
+                </div>
+                <div class="path-card-wrap">
+                  <div class="path-card ${isDone?'completed':''}">
+                    <div class="path-card-top">
+                      <div class="path-card-title">${l.icon} ${l.title}</div>
+                      <div class="path-card-xp">${l.xp}+ 🪙</div>
+                    </div>
+                    <div class="path-divider"></div>
+                    <div class="path-card-meta">
+                      <span>Módulo ${modDone} de ${nQs}</span>
+                      <span>${prog}%</span>
+                    </div>
+                    <div class="path-card-prog-track">
+                      <div class="path-card-prog-fill" style="width:${prog}%;background:${isDone?'var(--green)':'var(--accent)'}"></div>
+                    </div>
+                    <div class="path-card-btns">
+                      <button class="path-btn-view" onclick="startLesson('${l.id}')">Ver</button>
+                      <button class="path-btn-start ${isDone?'done':''}" onclick="startLesson('${l.id}')">${isDone?'Revisar':'Empezar'}</button>
+                    </div>
+                  </div>
+                </div>
+              </div>`;
+            }).join('')
+        }
+      </div>`;
+
     document.getElementById('quiz-view').classList.remove('active');
     listEl.style.display = '';
     const sc = document.getElementById('streak-card');
