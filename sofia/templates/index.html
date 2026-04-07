@@ -2382,8 +2382,9 @@
   );
   const getXP      = () => parseInt(localStorage.getItem(_K.xp)   || '0');
   const getLevel   = () => parseInt(localStorage.getItem(_K.lv)   || '1');
-  function xpIcon(size = 16) {
-    return `<img src="/static/aldiaxp.png" width="${size}" height="${size}" style="display:inline-block;vertical-align:middle;flex-shrink:0;object-fit:contain">`;
+  function xpIcon(size = 22) {
+    const w = Math.round(size * 0.75); // 768×1024 aspect ratio
+    return `<img src="/static/aldiaxp-icon.png" width="${w}" height="${size}" style="display:inline-block;vertical-align:middle;flex-shrink:0;object-fit:contain">`;
   }
   const getSkin    = () => localStorage.getItem(_K.skin)  || 'pink';
   const getTheme   = () => localStorage.getItem(_K.theme) || 'dark';
@@ -2441,18 +2442,23 @@
     const totalXP = xp + (getLevel() - 1) * 1000;
     const skin  = getSkin();
 
-    // Select image based on skin or XP level
-    let imgSrc;
-    if (skin === 'rainbow' || skin === 'skin_rainbow') imgSrc = '/static/puerco-arcoiris.png';
-    else if (skin === 'gold' || skin === 'skin_gold') imgSrc = '/static/puerco-dorado.png';
-    else if (skin === 'crystal' || skin === 'skin_crystal' || skin === 'blue' || skin === 'skin_blue') imgSrc = '/static/puerco-azul.png';
-    else if (skin === 'green' || skin === 'skin_green') imgSrc = '/static/puerco-verde.png';
-    else if (totalXP >= 2000) imgSrc = '/static/puerco-dorado.png';
-    else if (totalXP >= 1000) imgSrc = '/static/puerco-verde.png';
-    else if (totalXP >= 400) imgSrc = '/static/puerco-azul.png';
-    else imgSrc = '/static/puerco-rosa.png';
+    // Select base name based on skin or XP level
+    let base;
+    if (skin === 'rainbow' || skin === 'skin_rainbow') base = 'puerco-arcoiris';
+    else if (skin === 'gold' || skin === 'skin_gold') base = 'puerco-dorado';
+    else if (skin === 'crystal' || skin === 'skin_crystal' || skin === 'blue' || skin === 'skin_blue') base = 'puerco-azul';
+    else if (skin === 'green' || skin === 'skin_green') base = 'puerco-verde';
+    else if (totalXP >= 2000) base = 'puerco-dorado';
+    else if (totalXP >= 1000) base = 'puerco-verde';
+    else if (totalXP >= 400) base = 'puerco-azul';
+    else base = 'puerco-rosa';
 
-    const h = Math.round(size * 0.96);
+    // Full piggy only when savings goal is 100% met
+    const metaPct = (_lastBudget && _lastBudget.meta_pct) || 0;
+    const variant = metaPct >= 100 ? 'lleno' : 'vacio';
+    const imgSrc = `/static/${base}-${variant}.png`;
+
+    const h = Math.round(size * 1.33); // 768×1024 aspect ratio (portrait)
     return `<img src="${imgSrc}" class="piggy-svg" width="${size}" height="${h}" style="object-fit:contain;display:block">`;
 
     /* SVG removed */ if (false) { const _l = 0;
