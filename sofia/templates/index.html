@@ -2383,8 +2383,7 @@
   const getXP      = () => parseInt(localStorage.getItem(_K.xp)   || '0');
   const getLevel   = () => parseInt(localStorage.getItem(_K.lv)   || '1');
   function xpIcon(size = 28) {
-    const w = Math.round(size * 0.49); // 375×763 cropped aspect ratio (tall icon)
-    return `<img src="/static/aldiaxp-icon.png" width="${w}" height="${size}" style="display:inline-block;vertical-align:middle;flex-shrink:0;object-fit:contain">`;
+    return `<img src="/static/aldiaxp-icon.png" width="${size}" height="${size}" style="display:inline-block;vertical-align:middle;flex-shrink:0;object-fit:contain">`;
   }
   const getSkin    = () => localStorage.getItem(_K.skin)  || 'pink';
   const getTheme   = () => localStorage.getItem(_K.theme) || 'dark';
