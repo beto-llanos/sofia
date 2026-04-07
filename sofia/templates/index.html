@@ -1426,7 +1426,7 @@
     updateSidebarUser();
   }
 
-  function startChat() {
+  async function startChat() {
     document.getElementById('onboarding').style.display = 'none';
     document.getElementById('chat').classList.add('active');
     updateSidebarUser();
@@ -1483,10 +1483,12 @@
     if (lbl && answers.nombre) lbl.textContent = '● ' + answers.nombre;
     addMessage('aldia', saludo + '\n\n' + viabilidad + '\n\n💰 Ingreso: $' + (answers.ingreso || 0).toLocaleString('es-MX') + '/mes\n📂 Categorías: ' + cats + '\n\nYa puedes registrar tus gastos. Ej: "gasté 200 en el super".');
 
-    fetch('/api/setup', {
+    await fetch('/api/setup', {
       method: 'POST', headers: {'Content-Type':'application/json'},
       body: JSON.stringify(answers)
     });
+    // Refresh budget bars with real server data (includes gastos_iniciales)
+    fetch('/api/budget').then(r=>r.json()).then(d=>{ if(d.budget) updateBudget(d.budget); });
   }
 
   function autoResize(el) {
