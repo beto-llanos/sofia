@@ -13,9 +13,16 @@ import uuid
 
 load_dotenv()
 
+from datetime import timedelta
 app = Flask(__name__)
 app.secret_key = os.getenv("SECRET_KEY", "aldia-shadow-works-2026")
-CORS(app)
+app.config.update(
+    SESSION_COOKIE_SECURE=True,
+    SESSION_COOKIE_SAMESITE='None',
+    SESSION_COOKIE_HTTPONLY=True,
+    PERMANENT_SESSION_LIFETIME=timedelta(days=30),
+)
+CORS(app, supports_credentials=True)
 
 client = Groq(api_key=os.getenv("GROQ_API_KEY"))
 sb = create_client(os.getenv("SUPABASE_URL"), os.getenv("SUPABASE_KEY"))
@@ -317,8 +324,9 @@ def get_system_prompt(perfil, gastos):
     ingreso = perfil.get("ingreso", 0)
     meta = perfil.get("meta", 0)
     plazo = perfil.get("plazo_meses", 12)
-    total_gastado = sum(gastos.values())
-    disponible = ingreso - total_gastado
+    gastos_fijos_mensuales = perfil.get("gastos_fijos_mensuales", perfil.get("gastos_fijos_inicio", 0))
+    total_gastado = sum(gastos.values()) + gastos_fijos_mensuales
+    disponible = max(0, ingreso - total_gastado)
 
     # Velocidad de gasto y proyeccion mensual
     tasa_diaria = total_gastado / dia if dia > 0 else 0
@@ -365,7 +373,6 @@ def get_system_prompt(perfil, gastos):
     elif meta_tipo == 'invertir':
         meta_tipo_rule = "\n- OBJETIVO DEL USUARIO: empezar a invertir. Menciona instrumentos de bajo riesgo (CETES, fondos indexados) cuando haya superávit."
 
-    gastos_fijos_mensuales = perfil.get("gastos_fijos_mensuales", perfil.get("gastos_fijos_inicio", 0))
     contexto = f"""PERFIL DEL USUARIO{nombre_str}:
 - Ingreso mensual: ${ingreso:,.0f} pesos
 - Meta: ${meta:,.0f} pesos en {plazo} meses
@@ -601,8 +608,10 @@ def setup():
     perfil["onboarding_done"]  = True
     perfil["session_id"]       = session_id
 
+    # gastos_iniciales = gastos ya pagados este mes → registrar como gasto real
     gastos_iniciales = float(data.get("gastos_iniciales") or 0)
-    perfil["gastos_fijos_mensuales"] = gastos_iniciales
+    if gastos_iniciales > 0:
+        save_gasto(session_id, "imprevistos", gastos_iniciales, "gastos previos al registro")
 
     save_perfil(perfil)
 
@@ -660,6 +669,12 @@ def generar_plan():
 
     meta_tipo = data.get("meta_tipo", "ahorro")
 
+    # Si meta es 0 pero el tipo es 'ahorro', estimar basado en capacidad
+    if meta_tipo == "ahorro" and meta == 0:
+        meta = ahorro_mensual * plazo  # lo que pueden ahorrar en el plazo dado
+        ahorro_necesario = round(meta / plazo) if plazo > 0 else 0
+        es_viable = True
+
     if meta_tipo == "control":
         prompt = f"""Eres ALD.IA, asistente financiero para jovenes mexicanos. Este usuario SOLO quiere controlar y entender sus gastos, no tiene una meta de ahorro específica.
 
@@ -669,7 +684,7 @@ DATOS DEL USUARIO:
 
 INSTRUCCIONES:
 - NO hables de metas de ahorro ni plazos
-- Explica en 2-3 lineas qué puede hacer ALD.IA por él: registrar gastos por voz, ver a dónde va su dinero, recibir alertas antes de pasarse del presupuesto
+- Explica en 2-3 lineas qué puede hacer ALD.IA por él: registrar gastos por chat, ver a dónde va su dinero, recibir alertas antes de pasarse del presupuesto
 - Tono amigable, casual mexicano, máximo 4 lineas, emojis"""
     else:
         _goal_context = {
@@ -785,6 +800,7 @@ def register():
         perfil["password_hash"] = password_hash
         perfil["session_id"] = session_id
         save_perfil(perfil)
+        session.permanent = True
         session["email"] = email
         return jsonify({"status": "ok", "email": email})
     except Exception as e:
@@ -803,6 +819,7 @@ def login():
         usuario = res.data[0]
         if not bcrypt.checkpw(password.encode(), usuario["password_hash"].encode()):
             return jsonify({"error": "Email o contrasena incorrectos"}), 401
+        session.permanent = True
         session["session_id"] = usuario["session_id"]
         session["email"] = email
         return jsonify({
@@ -1018,8 +1035,9 @@ def puede_pagar():
     if ingreso == 0 or monto <= 0:
         return jsonify({"error": "datos insuficientes"})
 
-    total_gastado = sum(gastos.values())
-    disponible = ingreso - total_gastado
+    gastos_fijos = perfil.get("gastos_fijos_mensuales", perfil.get("gastos_fijos_inicio", 0))
+    total_gastado = sum(gastos.values()) + gastos_fijos
+    disponible = max(0, ingreso - total_gastado)
     meta = perfil.get("meta", 0)
     plazo = perfil.get("plazo_meses", 12)
     ahorro_mensual_necesario = meta / plazo if meta > 0 and plazo > 0 else 0
