@@ -698,9 +698,9 @@
         <div class="ob-option" onclick="selectOption('meta_tipo','invertir',this)"><div class="ob-opt-icon">📈</div><div class="ob-opt-text"><div class="ob-opt-title">Empezar a invertir</div><div class="ob-opt-desc">Hacer crecer mi dinero a largo plazo</div></div><div class="ob-check"></div></div>
         <div class="ob-option" onclick="selectOption('meta_tipo','control',this)"><div class="ob-opt-icon">📊</div><div class="ob-opt-text"><div class="ob-opt-title">Solo controlar mis gastos</div><div class="ob-opt-desc">Entender a dónde va mi dinero</div></div><div class="ob-check"></div></div>
       </div>
-      <!-- Meta amount extra (shown when 'ahorro' selected) -->
+      <!-- Meta amount extra (shown for all types except 'control') -->
       <div id="slide5-meta-extra" style="display:none;width:100%;max-width:380px">
-        <div style="font-size:.82rem;color:var(--text2);margin-bottom:8px;margin-top:4px">¿Cuánto quieres ahorrar y en cuánto tiempo?</div>
+        <div style="font-size:.82rem;color:var(--text2);margin-bottom:8px;margin-top:4px" id="meta-question">¿Cuánto quieres lograr?</div>
         <div class="ob-amount-wrap" style="margin-bottom:8px">
           <span class="ob-currency">$</span>
           <input type="number" class="ob-amount-input" id="input-meta" placeholder="50,000" inputmode="numeric" oninput="validateMetaExtra()">
@@ -714,7 +714,7 @@
           <option value="24">2 años</option>
           <option value="36">3 años</option>
         </select>
-        <div class="ob-amount-hint" style="margin-top:6px" id="meta-hint">Ingresa el monto que deseas alcanzar</div>
+        <div class="ob-amount-hint" style="margin-top:6px" id="meta-hint">Ingresa el monto para continuar</div>
       </div>
       <button class="ob-cta" id="cta-meta_tipo" onclick="obNext()" disabled>Listo, crear mi plan →</button>
     </div>
@@ -1172,8 +1172,8 @@
 
   function obNext() {
     if (currentSlide === 0) document.getElementById('ob-header').style.display = 'flex';
-    // On slide 5: collect plazo from select if 'ahorro'
-    if (currentSlide === 5 && answers.meta_tipo === 'ahorro') {
+    // On slide 5: collect plazo for all types that show the amount input
+    if (currentSlide === 5 && answers.meta_tipo && answers.meta_tipo !== 'control') {
       const plazoEl = document.getElementById('input-plazo');
       if (plazoEl) answers.plazo_meses = parseInt(plazoEl.value) || 12;
     }
@@ -1203,16 +1203,34 @@
     el.querySelector('.ob-check').innerHTML = '✓';
     answers[key] = value;
     const cta = document.getElementById('cta-' + key);
-    // For meta_tipo with 'ahorro', show extra inputs and require them
     if (key === 'meta_tipo') {
       const extra = document.getElementById('slide5-meta-extra');
-      if (extra) extra.style.display = (value === 'ahorro') ? '' : 'none';
-      if (value === 'ahorro') {
-        if (cta) cta.disabled = true; // require meta amount first
+      const qLabel = document.getElementById('meta-question');
+      const metaInput = document.getElementById('input-meta');
+      const hint = document.getElementById('meta-hint');
+      // Reset
+      if (metaInput) metaInput.value = '';
+      if (hint) hint.textContent = 'Ingresa el monto para continuar';
+      answers.meta = 0; answers.plazo_meses = 12;
+      // 'control' needs no amount
+      if (value === 'control') {
+        if (extra) extra.style.display = 'none';
+        if (cta) cta.disabled = false;
         return;
       }
-      // For other types, set default meta/plazo
-      if (value !== 'ahorro') { answers.meta = 0; answers.plazo_meses = 12; }
+      // All other types: show the input with appropriate label
+      const CFG = {
+        ahorro:     { q: '¿Cuánto quieres ahorrar y en cuánto tiempo?',                   ph: '50,000' },
+        deudas:     { q: '¿Cuánto debes en total? ¿En cuánto tiempo quieres liquidarlo?', ph: '30,000' },
+        emergencia: { q: '¿Cuánto quieres en tu fondo de emergencia?',                    ph: '20,000' },
+        invertir:   { q: '¿Cuánto quieres invertir mensualmente?',                        ph: '2,000'  },
+      };
+      const cfg = CFG[value] || { q: '¿Cuánto quieres lograr?', ph: '10,000' };
+      if (qLabel) qLabel.textContent = cfg.q;
+      if (metaInput) metaInput.placeholder = cfg.ph;
+      if (extra) extra.style.display = '';
+      if (cta) cta.disabled = true; // require amount first
+      return;
     }
     if (cta) cta.disabled = false;
   }
@@ -1220,18 +1238,30 @@
   function validateMetaExtra() {
     const val = parseFloat(document.getElementById('input-meta').value) || 0;
     const plazo = parseInt(document.getElementById('input-plazo').value) || 12;
+    const tipo = answers.meta_tipo;
     answers.meta = val;
     answers.plazo_meses = plazo;
     const hint = document.getElementById('meta-hint');
     const cta = document.getElementById('cta-meta_tipo');
     if (val <= 0) {
-      if (hint) hint.textContent = 'Ingresa el monto que deseas alcanzar';
+      if (hint) hint.textContent = 'Ingresa el monto para continuar';
       if (cta) cta.disabled = true;
-    } else {
-      const mensual = Math.round(val / plazo);
-      if (hint) hint.textContent = `≈ $${mensual.toLocaleString('es-MX')}/mes durante ${plazo} meses`;
-      if (cta) cta.disabled = false;
+      return;
     }
+    let hintText = '';
+    const mensual = Math.round(val / plazo);
+    if (tipo === 'ahorro')
+      hintText = `≈ $${mensual.toLocaleString('es-MX')}/mes durante ${plazo} meses`;
+    else if (tipo === 'deudas')
+      hintText = `≈ $${mensual.toLocaleString('es-MX')}/mes para liquidar en ${plazo} meses`;
+    else if (tipo === 'emergencia')
+      hintText = `≈ $${mensual.toLocaleString('es-MX')}/mes para alcanzar tu fondo en ${plazo} meses`;
+    else if (tipo === 'invertir')
+      hintText = `Invertirás $${val.toLocaleString('es-MX')}/mes → $${(val * plazo).toLocaleString('es-MX')} en ${plazo} meses`;
+    else
+      hintText = `≈ $${mensual.toLocaleString('es-MX')}/mes durante ${plazo} meses`;
+    if (hint) hint.textContent = hintText;
+    if (cta) cta.disabled = false;
   }
 
   function validateNombre() {
