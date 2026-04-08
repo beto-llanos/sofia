@@ -171,10 +171,6 @@
     .mp-cuando-si{background:rgba(59,130,246,.07);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:10px 12px;margin-bottom:4px;}
     .mp-cuando-progress{height:5px;background:var(--border);border-radius:3px;margin:7px 0 4px;}
     .mp-cuando-fill{height:5px;background:var(--accent);border-radius:3px;}
-    .mp-sac-row{display:flex;align-items:center;justify-content:space-between;padding:5px 0;font-size:.79rem;border-bottom:1px solid var(--border);}
-    .mp-sac-row:last-child{border-bottom:none;}
-    .mp-sac-bar{flex:1;height:4px;background:var(--border);border-radius:2px;margin:0 8px;}
-    .mp-sac-fill{height:4px;border-radius:2px;background:var(--accent);}
     .mp-ai-rec{background:var(--surface2);border:1px solid var(--border);border-radius:8px;padding:10px 12px;margin-bottom:4px;font-size:.82rem;color:var(--text);line-height:1.55;}
     .mp-ai-header{display:flex;align-items:center;gap:6px;margin-bottom:6px;}
     .mp-ai-badge{width:18px;height:18px;border-radius:50%;background:linear-gradient(135deg,var(--accent),var(--accent2));display:flex;align-items:center;justify-content:center;font-size:.58rem;font-weight:800;color:#fff;flex-shrink:0;}
@@ -1166,11 +1162,6 @@
         <div class="mp-cuando-progress"><div class="mp-cuando-fill" id="mp-cuando-fill" style="width:0%"></div></div>
         <div id="mp-cuando-sub" style="font-size:.72rem;color:var(--text2)"></div>
       </div>
-      <!-- ¿Qué sacrifico? -->
-      <div id="mp-sac-wrap" style="display:none">
-        <div class="mp-section-title">🔍 Dónde cae este gasto en tu presupuesto</div>
-        <div id="mp-sac-rows"></div>
-      </div>
     </div>
     <button class="modal-close" onclick="cerrarModal()">Cerrar</button>
   </div>
@@ -2112,35 +2103,6 @@
   }
 
   // ¿Qué sacrifico?
-  function mpRenderSacrificio(d) {
-    const wrap = document.getElementById('mp-sac-wrap');
-    const rows = document.getElementById('mp-sac-rows');
-    if (!wrap || !rows || !d.slacks || d.slacks.length === 0) { if(wrap) wrap.style.display='none'; return; }
-    const impacto = d.pago_mensual || d.monto_total;
-    let acumulado = 0;
-    const afectadas = [];
-    for (const s of d.slacks) {
-      if (acumulado >= impacto) break;
-      const absorbe = Math.min(s.slack, impacto - acumulado);
-      if (absorbe > 0) { afectadas.push({...s, absorbe}); acumulado += absorbe; }
-    }
-    if (afectadas.length === 0) { wrap.style.display='none'; return; }
-    const catEmoji = {vivienda:'🏠',comida:'🍔',transporte:'🚗',salud:'💊',educacion:'📚',ocio:'🎮',ropa:'👕',deudas:'💳',ahorro:'🐷',imprevistos:'⚡'};
-    const catItem = d.cat_item || null;
-    rows.innerHTML = afectadas.map((a, i) => {
-      const pct = Math.round((a.absorbe / (a.limite||1)) * 100);
-      const uso = Math.min(Math.round((a.gastado / (a.limite||1))*100), 100);
-      const isItemCat = catItem && a.cat === catItem;
-      const label = isItemCat ? `${catEmoji[a.cat]||'📌'} ${a.cat} <span style="font-size:.68rem;color:var(--accent);font-weight:600">← gasto real</span>` : `${catEmoji[a.cat]||'📌'} ${a.cat}`;
-      return `<div class="mp-sac-row">
-        <span style="min-width:90px;display:flex;align-items:center;gap:4px">${label}</span>
-        <div class="mp-sac-bar"><div class="mp-sac-fill" style="width:${uso}%;background:${uso>85?'var(--red)':uso>60?'var(--yellow)':'var(--accent)'}"></div></div>
-        <span style="color:var(--red);font-weight:700;white-space:nowrap">-$${a.absorbe.toLocaleString('es-MX')}</span>
-      </div>`;
-    }).join('') + (acumulado < impacto ? `<div style="font-size:.73rem;color:var(--red);padding-top:5px">⚠️ Aún faltan $${(impacto-acumulado).toLocaleString('es-MX')} — excede todos los límites</div>` : '');
-    wrap.style.display = '';
-  }
-
   // Carga IA asíncrona
   async function mpCargarIA(d) {
     const rec = document.getElementById('mp-ai-rec');
@@ -2176,7 +2138,7 @@
     const grid = document.getElementById('mp-result-grid');
     const tip  = document.getElementById('mp-tip-box');
     // Ocultar secciones extra mientras carga
-    ['mp-ai-rec','mp-comp-wrap','mp-cuando-wrap','mp-sac-wrap'].forEach(id => {
+    ['mp-ai-rec','mp-comp-wrap','mp-cuando-wrap'].forEach(id => {
       const el = document.getElementById(id); if (el) el.style.display = 'none';
     });
     vbox.className = 'mp-verdict loading'; vbox.textContent = '⏳ Calculando...';
@@ -2228,7 +2190,6 @@
       // ── 4 secciones extra ──────────────────────────
       mpRenderComparador(d.monto_total, d.ingreso, _mpTipo);
       mpRenderCuandoSi(d);
-      mpRenderSacrificio(d);
       mpCargarIA(d);   // asíncrona, no bloquea
     } catch(e) {
       vbox.className = 'mp-verdict nok'; vbox.textContent = '❌ Error de conexión. Intenta de nuevo.';
