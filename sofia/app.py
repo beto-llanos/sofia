@@ -838,28 +838,33 @@ def resumen():
     porcentajes_activos = calcular_porcentajes_activos(perfil)
     cat_critica = None
     pct_critico = 0
+    cats_con_gasto = 0
     for cat, pct in porcentajes_activos.items():
         limite = ingreso * pct / 100
         gastado = gastos.get(cat, 0)
+        if gastado > 0:
+            cats_con_gasto += 1
         if limite > 0:
             uso = gastado / limite * 100
             if uso > pct_critico:
                 pct_critico = uso
                 cat_critica = cat
+    # Solo alertar si la categoria supera 75% del limite; si no hay alerta real, no mencionar categorias
+    alerta_cat = cat_critica if (pct_critico >= 75 and cats_con_gasto > 0) else None
 
     prompt = f"""Eres ALD.IA, asistente financiera empatica para jovenes mexicanos.
 
-El usuario acaba de abrir la app. Genera un resumen proactivo del mes en maximo 2 oraciones:
+El usuario acaba de abrir la app. Genera un saludo breve y motivador con 1-2 datos clave del mes.
+Termina con una pregunta abierta corta sobre sus finanzas (NO sobre una categoria especifica a menos que haya alerta).
 
 Datos:
 - Dia del mes: {dia}
 - Ingreso mensual: ${ingreso:,.0f}
 - Total gastado: ${total_gastado:,.0f}
 - Disponible: ${disponible:,.0f}
-- Categoria mas usada: {cat_critica} ({round(pct_critico)}% de su limite)
+{f'- ALERTA: {alerta_cat} al {round(pct_critico)}% de su limite — mencionala' if alerta_cat else '- Sin alertas activas — NO menciones categorias especificas'}
 
-El mensaje debe saludar brevemente y dar 1-2 datos clave. Termina con pregunta corta.
-Espanol casual, emojis, maximo 2 oraciones."""
+Espanol casual, emojis, maximo 2 oraciones. Si no hay alerta, la pregunta final debe ser general ('¿cuál es tu plan?', '¿qué gastos tienes hoy?', etc.)."""
 
     response = client.chat.completions.create(
         model="llama-3.3-70b-versatile",
