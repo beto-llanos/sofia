@@ -80,7 +80,7 @@
     .sb-stat-row{display:flex;justify-content:space-between;align-items:center;padding:5px 14px;font-size:.78rem;}
     .sb-stat-lbl{color:var(--text2);}
     .sb-stat-val{font-weight:700;color:var(--text);}
-    #chat{position:fixed;top:0;left:0;right:0;bottom:0;z-index:10;display:none;flex-direction:column;background:transparent;transition:left .28s cubic-bezier(.4,0,.2,1);}
+    #chat{position:fixed;top:0;left:0;right:0;bottom:0;z-index:10;display:none;flex-direction:column;background:transparent;transition:left .28s cubic-bezier(.4,0,.2,1);height:100%;height:100dvh;}
     #chat.active{display:flex!important;}
     .chat-header{display:flex;align-items:center;gap:10px;padding:14px 16px 10px;border-bottom:1px solid var(--border);background:rgba(8,11,18,.85);backdrop-filter:blur(16px);flex-shrink:0;}
     .menu-btn{background:none;border:none;color:var(--text2);font-size:1.3rem;cursor:pointer;padding:4px 8px;border-radius:8px;transition:.15s;}
@@ -102,7 +102,7 @@
     .stats-bar .stats-disp{display:flex;gap:5px;align-items:center;}
     .stats-bar .stats-disp span{color:var(--text);font-weight:600;}
     .input-area{display:flex;align-items:flex-end;gap:8px;padding:10px 12px;background:var(--bg);border-top:1px solid var(--border);backdrop-filter:blur(12px);flex-shrink:0;}
-    #input{flex:1;resize:none;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 13px;font-size:.92rem;font-family:inherit;outline:none;max-height:120px;min-height:42px;transition:.15s;line-height:1.4;}
+    #input{flex:1;resize:none;background:var(--surface2);border:1px solid var(--border);border-radius:12px;color:var(--text);padding:10px 13px;font-size:16px;font-family:inherit;outline:none;max-height:120px;min-height:42px;transition:.15s;line-height:1.4;}
     #input:focus{border-color:var(--accent);}
     .send-btn{width:40px;height:40px;border-radius:10px;border:none;background:var(--accent);color:#fff;font-size:1rem;cursor:pointer;transition:.15s;flex-shrink:0;display:flex;align-items:center;justify-content:center;}
     .send-btn:hover{opacity:.85;}
@@ -2418,21 +2418,22 @@
     input.value = '';
   }
 
-  // ── iOS Safari: resize chat when virtual keyboard appears ─────────────────
-  // Without this, the keyboard covers the input bar on some iOS versions
+  // ── iOS Safari: ajuste al teclado virtual ────────────────────────────────
   if (window.visualViewport) {
-    let lastH = window.visualViewport.height;
-    window.visualViewport.addEventListener('resize', () => {
+    const applyViewport = () => {
       const chat = document.getElementById('chat');
-      if (!chat || !chat.classList.contains('active')) return;
-      const h = window.visualViewport.height;
-      // When keyboard appears (height shrinks), set explicit height so flex layout adapts
-      chat.style.height = h + 'px';
-      // Scroll messages to bottom so last message stays visible above keyboard
+      if (!chat) return;
+      const vp = window.visualViewport;
+      // Fijar top y height exactos al viewport visual — elimina el conflicto con bottom:0
+      chat.style.top    = vp.offsetTop + 'px';
+      chat.style.height = vp.height + 'px';
+      chat.style.bottom = 'auto';
+      // Scroll al último mensaje
       const msgs = document.getElementById('messages');
-      if (msgs && h < lastH) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 50);
-      lastH = h;
-    });
+      if (msgs) setTimeout(() => { msgs.scrollTop = msgs.scrollHeight; }, 60);
+    };
+    window.visualViewport.addEventListener('resize', applyViewport);
+    window.visualViewport.addEventListener('scroll', applyViewport);
   }
 
   function openSidebar(){document.getElementById("sidebar").classList.add("open");document.body.classList.add("sb-open");}
