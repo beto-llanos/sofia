@@ -1259,7 +1259,13 @@ def puede_pagar():
                 "gastado": round(gastado_cat),
                 "uso_pct": round(gastado_cat / limite_cat * 100) if limite_cat > 0 else 0
             })
-    slacks.sort(key=lambda x: x["slack"], reverse=True)
+    # Clasificar el item para mostrar su categoría real primero
+    cat_item = classify_gasto(nombre) if nombre else None
+    def slack_sort_key(s):
+        if cat_item and s["cat"] == cat_item:
+            return (0, -s["slack"])   # categoría del item siempre primero
+        return (1, -s["slack"])       # luego por mayor slack disponible
+    slacks.sort(key=slack_sort_key)
 
     # ¿Cuándo sí puedo comprarlo?
     meses_para_poder = 0
@@ -1297,6 +1303,7 @@ def puede_pagar():
         "dias_trabajados": dias_trabajados,
         "ingreso": ingreso,
         "slacks": slacks[:4],
+        "cat_item": cat_item,
         "meses_para_poder": meses_para_poder,
         "fecha_puede": fecha_puede_str,
         "ahorro_mes_requerido": ahorro_mes_requerido,

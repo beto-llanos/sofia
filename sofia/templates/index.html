@@ -1168,7 +1168,7 @@
       </div>
       <!-- ¿Qué sacrifico? -->
       <div id="mp-sac-wrap" style="display:none">
-        <div class="mp-section-title">🔍 ¿Qué categoría absorbe el impacto?</div>
+        <div class="mp-section-title">🔍 Dónde cae este gasto en tu presupuesto</div>
         <div id="mp-sac-rows"></div>
       </div>
     </div>
@@ -2126,11 +2126,14 @@
     }
     if (afectadas.length === 0) { wrap.style.display='none'; return; }
     const catEmoji = {vivienda:'🏠',comida:'🍔',transporte:'🚗',salud:'💊',educacion:'📚',ocio:'🎮',ropa:'👕',deudas:'💳',ahorro:'🐷',imprevistos:'⚡'};
-    rows.innerHTML = afectadas.map(a => {
+    const catItem = d.cat_item || null;
+    rows.innerHTML = afectadas.map((a, i) => {
       const pct = Math.round((a.absorbe / (a.limite||1)) * 100);
       const uso = Math.min(Math.round((a.gastado / (a.limite||1))*100), 100);
+      const isItemCat = catItem && a.cat === catItem;
+      const label = isItemCat ? `${catEmoji[a.cat]||'📌'} ${a.cat} <span style="font-size:.68rem;color:var(--accent);font-weight:600">← gasto real</span>` : `${catEmoji[a.cat]||'📌'} ${a.cat}`;
       return `<div class="mp-sac-row">
-        <span style="min-width:90px">${catEmoji[a.cat]||'📌'} ${a.cat}</span>
+        <span style="min-width:90px;display:flex;align-items:center;gap:4px">${label}</span>
         <div class="mp-sac-bar"><div class="mp-sac-fill" style="width:${uso}%;background:${uso>85?'var(--red)':uso>60?'var(--yellow)':'var(--accent)'}"></div></div>
         <span style="color:var(--red);font-weight:700;white-space:nowrap">-$${a.absorbe.toLocaleString('es-MX')}</span>
       </div>`;
