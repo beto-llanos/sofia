@@ -2338,41 +2338,50 @@
     document.getElementById('modal-banco').style.display = 'none';
   }
 
+  // Mapeo banco → perfil Syncfy para demo
+  const BANCO_PERFIL = {
+    'Banco Azteca': 1,  // Estable, oferta automotriz razonable
+    'BBVA':         2,  // Apretado, TDC 79%, DTI 46%, mala oferta
+    'Nu':           3,  // Crisis, TDC vencida, reestructura disponible
+    'HSBC':         1,
+  };
+
   function iniciarOAuth(banco) {
-    if (_oauthConnecting) return;   // guard against double-click / multiple banks
+    if (_oauthConnecting) return;
     _oauthConnecting = true;
-    // Disable all banco buttons immediately so only one bank fires
     document.querySelectorAll('.banco-btn').forEach(b => b.disabled = true);
     document.getElementById('banco-grid').style.display = 'none';
     document.getElementById('oauth-success').style.display = 'none';
     const loader = document.getElementById('oauth-loader');
     loader.style.display = 'block';
     document.getElementById('oauth-banco-name').textContent = banco;
-    document.getElementById('banco-sub').textContent = 'Redirigiendo a ' + banco + '...';
+    document.getElementById('banco-sub').textContent = 'Autenticando con ' + banco + '...';
     document.getElementById('banco-close-btn').textContent = 'Cancelar';
+
+    const perfil_id = BANCO_PERFIL[banco] || 1;
 
     setTimeout(() => {
       fetch('/api/conectar-banco', {
         method: 'POST', headers: {'Content-Type':'application/json'},
-        body: JSON.stringify({banco})
+        body: JSON.stringify({banco, perfil_id})
       }).then(r => r.json()).then(data => {
         loader.style.display = 'none';
         const success = document.getElementById('oauth-success');
         success.style.display = 'block';
-        document.getElementById('oauth-success-title').textContent = banco + ' conectado exitosamente';
+        document.getElementById('oauth-success-title').textContent = '✅ ' + banco + ' conectado';
         document.getElementById('banco-sub').textContent = '';
         const cuentasEl = document.getElementById('oauth-cuentas');
         cuentasEl.innerHTML = (data.cuentas || []).map(c => `
           <div class="cuenta-card">
             <div><div class="cuenta-tipo">${c.tipo}</div><div class="cuenta-num">${c.numero}</div></div>
-            <div class="cuenta-saldo">${c.saldo !== undefined ? '$' + c.saldo.toLocaleString('es-MX') : 'Crédito: $' + (c.usado || 0).toLocaleString('es-MX') + ' / $' + (c.limite || 0).toLocaleString('es-MX')}</div>
+            <div class="cuenta-saldo">${c.saldo !== undefined ? '$' + c.saldo.toLocaleString('es-MX') : 'Crédito: $' + (c.usado||0).toLocaleString('es-MX') + ' / $' + (c.limite||0).toLocaleString('es-MX')}</div>
           </div>`).join('');
         document.getElementById('banco-close-btn').textContent = '¡Listo!';
-        // Actualizar budget grid y health score con los datos actuales
         fetch('/api/budget').then(r=>r.json()).then(b=>{ if(b.budget) updateBudget(b.budget); });
         loadHealthScore();
-        // Mensaje en el chat
-        addMessage('aldia', `🏦 ${banco} conectado. ${data.mensaje}\n\nYa puedo ver tus movimientos y darte consejos más precisos.`);
+        // Mensaje proactivo en el chat con análisis real
+        const icon = data.tiene_alerta ? '🚨' : data.tiene_oferta ? '💡' : '🏦';
+        addMessage('aldia', `${icon} *${banco} conectado vía open finance.*\n\n${data.analisis}`);
       }).catch(() => {
         _oauthConnecting = false;
         loader.style.display = 'none';

@@ -1550,18 +1550,114 @@ def importar_estado():
 def conectar_banco():
     data = request.json or {}
     banco = data.get("banco", "Banco Azteca")
+    perfil_id = int(data.get("perfil_id", 1))
+
     session_id = get_session_id()
     perfil = load_perfil(session_id)
+    gastos = load_gastos(session_id)
+
+    # Cargar JSON mock Syncfy
+    mock_path = os.path.join(os.path.dirname(__file__), f"syncfy_demo_perfil_{perfil_id}.json")
+    try:
+        with open(mock_path, "r", encoding="utf-8") as f:
+            syncfy_data = json.load(f)
+        transactions = syncfy_data.get("response", [])
+    except Exception:
+        transactions = []
+
+    # Clasificar transacciones por event_type
+    def by_type(t): return t.get("extra", {}).get("event_type", "")
+    incomes      = [t for t in transactions if by_type(t) == "income"]
+    expenses     = [t for t in transactions if by_type(t) == "expense"]
+    loan_st      = [t for t in transactions if by_type(t) == "loan_status"]
+    card_st      = [t for t in transactions if by_type(t) == "credit_card_status"]
+    credit_off   = [t for t in transactions if by_type(t) == "credit_offer"]
+    fees         = [t for t in transactions if by_type(t) == "fee"]
+    debt_sum     = [t for t in transactions if by_type(t) == "debt_summary"]
+    restructure  = [t for t in transactions if by_type(t) == "debt_restructure_offer"]
+
+    total_income   = sum(t["amount"] for t in incomes)
+    total_expenses = sum(abs(t["amount"]) for t in expenses)
+
+    # Construir contexto para IA
+    ctx = []
+    if incomes:
+        ctx.append(f"Ingreso detectado: ${total_income:,.0f} MXN ({incomes[0]['extra'].get('source','ingreso')})")
+    for ls in loan_st:
+        e = ls["extra"]
+        ctx.append(f"Préstamo activo: ${e.get('current_balance',0):,.0f} balance, {e.get('remaining_payments',0)} pagos, tasa {e.get('interest_rate_annual',0)}% anual, estado: {e.get('status','vigente')}")
+    for cs in card_st:
+        e = cs["extra"]
+        util = round(e.get("utilization_ratio", 0) * 100)
+        ctx.append(f"TDC: {util}% utilización (${e.get('statement_balance',0):,.0f}/${e.get('credit_limit',0):,.0f}), estado: {e.get('card_status','')}, pago: {e.get('payment_type','')}")
+    for fe in fees:
+        e = fe["extra"]
+        if e.get("severity") == "high":
+            ctx.append(f"ALERTA COMISIÓN: {fe['description']} — ${abs(fe['amount']):,.0f}")
+    for ds in debt_sum:
+        e = ds["extra"]
+        ctx.append(f"Resumen deuda: DTI {round(e.get('debt_to_income_ratio',0)*100)}%, pagos deuda ${e.get('total_monthly_debt_payments',0):,.0f}/mes, riesgo: {e.get('liquidity_risk','')}")
+    for co in credit_off:
+        e = co["extra"]
+        ctx.append(f"OFERTA CRÉDITO: {co['description']} — ${e.get('loan_amount',0):,.0f} a {e.get('interest_rate_annual',0)}% / {e.get('term_months',0)} meses = ${e.get('estimated_monthly_payment',0):,.0f}/mes")
+    for ro in restructure:
+        e = ro["extra"]
+        ctx.append(f"OFERTA REESTRUCTURA: ${e.get('new_monthly_payment',0):,.0f}/mes a {e.get('interest_rate_annual',0)}% / {e.get('new_term_months',0)} meses, aplica a: {', '.join(e.get('applies_to',[]))}")
+
+    ingreso_perfil = perfil.get("ingreso", round(total_income * 2))
+    total_gastado  = sum(gastos.values())
+    disponible     = max(0, ingreso_perfil - total_gastado)
+    meta           = perfil.get("meta", 0)
+
+    prompt = f"""Eres ALD.IA, asistente financiera para jovenes mexicanos. Acabas de leer los datos reales del banco del usuario via open finance (Syncfy / {banco}).
+
+SEÑALES DETECTADAS EN SU CUENTA:
+{chr(10).join(ctx) if ctx else "Sin señales relevantes."}
+
+PRESUPUESTO ACTUAL EN ALD.IA:
+- Ingreso mensual: ${ingreso_perfil:,.0f}
+- Gastado este mes: ${total_gastado:,.0f}
+- Disponible: ${disponible:,.0f}
+- Meta de ahorro: ${meta:,.0f}
+
+INSTRUCCIONES:
+1. Máximo 5 líneas, directo al punto
+2. Si hay oferta de crédito: di SI o NO con números reales y cómo impacta su presupuesto
+3. Si hay deudas vencidas o DTI alto: alerta clara con consecuencias concretas
+4. Si hay reestructura disponible y tiene sentido financiero: menciónala
+5. Si todo está bien: confirma y da 1 tip proactivo
+6. Tono: amigo que sabe de finanzas, emojis, español mexicano casual. No empieces con "he analizado..."."""
+
+    response = client.chat.completions.create(
+        model="llama-3.3-70b-versatile",
+        messages=[{"role": "user", "content": prompt}],
+        temperature=0.65,
+        max_tokens=280
+    )
+    analisis = response.choices[0].message.content.strip()
+
     perfil["banco_conectado"] = banco
+    perfil["syncfy_perfil_id"] = perfil_id
     save_perfil(perfil)
+
+    # Cuentas mock basadas en datos reales
+    cuentas = [{"tipo": "Débito", "numero": "****3421", "saldo": round(total_income - total_expenses)}]
+    if card_st:
+        cs_e = card_st[0]["extra"]
+        cuentas.append({"tipo": "Crédito", "numero": "****7890",
+                        "limite": cs_e.get("credit_limit", 20000),
+                        "usado": cs_e.get("statement_balance", 0)})
+
+    tiene_alerta = bool(fees) or any(c["extra"].get("card_status") == "delinquent" for c in card_st)
+    tiene_oferta = bool(credit_off) or bool(restructure)
+
     return jsonify({
         "status": "conectado",
         "banco": banco,
-        "mensaje": f"✅ {banco} conectado exitosamente.",
-        "cuentas": [
-            {"tipo": "Débito", "numero": "****3421", "saldo": 8240},
-            {"tipo": "Crédito", "numero": "****7890", "limite": 20000, "usado": 4500},
-        ]
+        "analisis": analisis,
+        "cuentas": cuentas,
+        "tiene_alerta": tiene_alerta,
+        "tiene_oferta": tiene_oferta,
     })
 
 
