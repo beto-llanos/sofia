@@ -414,6 +414,13 @@
     .cg-price{font-size:.9rem;font-weight:700;color:var(--accent);margin:0 0 5px;}
     .cg-months{font-size:.7rem;color:var(--text2);display:flex;align-items:center;gap:3px;}
     .cg-msi{font-size:.67rem;color:var(--text2);margin-top:2px;opacity:.8;}
+    .cg-desde{font-size:.72rem;color:var(--text2);margin-bottom:4px;}
+    .cg-impact{display:inline-flex;align-items:center;gap:4px;font-size:.7rem;font-weight:600;padding:2px 8px;border-radius:6px;margin-bottom:7px;}
+    .cg-impact.verde{background:rgba(16,185,129,.12);color:var(--green);}
+    .cg-impact.amarillo{background:rgba(234,179,8,.12);color:#FBBF24;}
+    .cg-impact.rojo{background:rgba(239,68,68,.12);color:var(--red);}
+    .cg-eval-btn{width:100%;margin-top:8px;padding:7px 0;background:var(--accent);color:#fff;border:none;border-radius:8px;font-size:.75rem;font-weight:700;cursor:pointer;letter-spacing:.02em;transition:.15s;}
+    .cg-eval-btn:hover{opacity:.88;}
     .ob-sim-badge{font-size:.73rem;color:var(--text2);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:6px 12px;margin-bottom:14px;text-align:center;}
     .streak-card{background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(245,158,11,.15));border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;}
     .streak-fire{font-size:1.5rem;}
@@ -3535,22 +3542,48 @@
     return '';
   }
 
+  function cgGetDisponible() {
+    const el = document.getElementById('disp-compact');
+    if (el && el.textContent && el.textContent !== '-') {
+      const n = parseFloat(el.textContent.replace(/[^0-9.]/g, ''));
+      if (!isNaN(n)) return n;
+    }
+    return ingresoRef * 0.5; // fallback: mitad del ingreso
+  }
+
+  function cgImpacto(precio) {
+    const disp = cgGetDisponible();
+    if (disp <= 0) return { cls:'amarillo', label:'Sin datos' };
+    if (precio < disp * 0.5) return { cls:'verde',    label:'\uD83D\uDFE2 Al alcance' };
+    if (precio < disp)       return { cls:'amarillo', label:'\uD83D\uDFE1 Ajustado' };
+    return                          { cls:'rojo',     label:'\uD83D\uDD34 Fuera de rango' };
+  }
+
+  function cgEvaluar(nombre, precio) {
+    const nomEl = document.getElementById('mp-nombre');
+    const monEl = document.getElementById('mp-monto');
+    if (nomEl) nomEl.value = nombre;
+    if (monEl) monEl.value = precio;
+    abrirModal();
+  }
+
   function renderCatalogPanel() {
     const panel = document.getElementById('catalog-panel');
     if (!panel) return;
-    const ingreso = answers ? (answers.ingreso || 0) : 0;
+    const ingreso = ingresoRef || (answers ? (answers.ingreso || 0) : 0);
     const ahorro = Math.round(ingreso * 0.20);
 
     const infoBar = ingreso > 0
-      ? '<div class="cg-info-bar">Con tu ingreso de <strong>$' + ingreso.toLocaleString('es-MX') + '</strong>/mes, ahorrando el 20% son <strong>$' + ahorro.toLocaleString('es-MX') + '/mes</strong> para tus metas.</div>'
-      : '<div class="cg-info-bar">Registra tu ingreso en el chat para ver en cu\u00E1ntos meses podr\u00EDas tener cada producto.</div>';
+      ? '<div class="cg-info-bar">Explora productos y eval\u00FAa c\u00F3mo comprarlos seg\u00FAn tu situaci\u00F3n financiera actual.</div>'
+      : '<div class="cg-info-bar">Registra tu ingreso en el chat para ver el impacto financiero de cada producto.</div>';
 
     const cards = CATALOGO.map(function(p) {
-      const meses = ahorro > 0 ? Math.ceil(p.precio / ahorro) : null;
-      const msiPago = p.msi ? Math.ceil(p.precio / p.msi) : null;
-      const badgeHtml  = p.badge ? '<div class="cg-badge">' + p.badge + '</div>' : '';
-      const mesesHtml  = meses   ? '<div class="cg-months">\u{1F550} ' + meses + ' mes' + (meses !== 1 ? 'es' : '') + ' ahorrando</div>' : '';
-      const msiHtml    = msiPago ? '<div class="cg-msi">O $' + msiPago.toLocaleString('es-MX') + '/mes a ' + p.msi + ' MSI</div>' : '';
+      const impacto  = cgImpacto(p.precio);
+      const desde    = Math.ceil(p.precio / 12);
+      const msiPago  = p.msi ? Math.ceil(p.precio / p.msi) : null;
+      const badgeHtml = p.badge ? '<div class="cg-badge">' + p.badge + '</div>' : '';
+      const msiHtml   = msiPago ? '<div class="cg-msi">O $' + msiPago.toLocaleString('es-MX') + '/mes a ' + p.msi + ' MSI</div>' : '';
+      const safeNombre = p.nombre.replace(/'/g, "\\'");
       return '<div class="cg-card">' +
         '<div class="cg-img-wrap">' +
           '<img class="cg-img" src="' + p.img + '" alt="' + p.nombre.replace(/"/g,'&quot;') + '" loading="lazy" ' +
@@ -3562,13 +3595,17 @@
           badgeHtml +
           '<div class="cg-name">' + p.nombre + '</div>' +
           '<div class="cg-price">$' + p.precio.toLocaleString('es-MX') + '</div>' +
-          mesesHtml + msiHtml +
+          '<div class="cg-desde">Desde $' + desde.toLocaleString('es-MX') + '/mes</div>' +
+          '<div class="cg-impact ' + impacto.cls + '">' + impacto.label + '</div>' +
+          msiHtml +
+          '<button class="cg-eval-btn" onclick="cgEvaluar(\'' + safeNombre + '\',' + p.precio + ')">Evaluar compra</button>' +
         '</div>' +
       '</div>';
     }).join('');
 
     panel.innerHTML =
-      '<div class="cg-header"><h2>\uD83D\uDED2 Cat\u00E1logo</h2><p>Banco Azteca &amp; Shopping M\u00E1s &mdash; Simulador</p></div>' +
+      '<div class="cg-header"><h2>\uD83D\uDED2 Cat\u00E1logo</h2>' +
+        '<p>Explora productos y eval\u00FAa c\u00F3mo comprarlos</p></div>' +
       infoBar +
       '<div class="cg-grid">' + cards + '</div>';
   }
