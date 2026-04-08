@@ -398,21 +398,22 @@
     /* ── Learn/Games panel ── */
     .learn-panel,.store-panel{display:none;flex:1;overflow-y:auto;padding:16px 14px;flex-direction:column;gap:12px;}
     .catalog-panel{display:none;flex:1;overflow-y:auto;padding:16px 14px;flex-direction:column;gap:0;}
-    .cat-header{padding:0 0 10px;}
-    .cat-header h2{font-size:1.05rem;font-weight:700;margin:0 0 2px;}
-    .cat-header p{font-size:.76rem;color:var(--text2);margin:0;}
-    .cat-info-bar{font-size:.76rem;color:var(--text2);margin-bottom:12px;padding:8px 12px;background:rgba(59,130,246,.08);border-radius:8px;border:1px solid rgba(59,130,246,.15);line-height:1.5;}
-    .cat-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:16px;}
-    .cat-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:.15s;}
-    .cat-img-wrap{aspect-ratio:4/3;background:var(--surface2);display:flex;align-items:center;justify-content:center;overflow:hidden;}
-    .cat-img{width:100%;height:100%;object-fit:cover;}
-    .cat-img-fallback{font-size:2.4rem;}
-    .cat-body{padding:9px 10px;}
-    .cat-badge{display:inline-block;font-size:.58rem;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(16,185,129,.15);color:var(--green);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
-    .cat-name{font-size:.78rem;font-weight:700;margin:0 0 3px;line-height:1.3;}
-    .cat-price{font-size:.92rem;font-weight:700;color:var(--accent);margin:0 0 5px;}
-    .cat-months{font-size:.7rem;color:var(--text2);display:flex;align-items:center;gap:3px;}
-    .cat-msi{font-size:.67rem;color:var(--text2);margin-top:2px;opacity:.8;}
+    .cg-header{padding:0 0 10px;}.cg-header h2{font-size:1.05rem;font-weight:700;margin:0 0 2px;}.cg-header p{font-size:.76rem;color:var(--text2);margin:0;}
+    .cg-info-bar{font-size:.76rem;color:var(--text2);margin-bottom:12px;padding:8px 12px;background:rgba(59,130,246,.08);border-radius:8px;border:1px solid rgba(59,130,246,.15);line-height:1.5;}
+    .cg-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px;padding-bottom:16px;}
+    .cg-card{background:var(--surface);border:1px solid var(--border);border-radius:14px;overflow:hidden;transition:.15s;}
+    .cg-img-wrap{aspect-ratio:4/3;background:var(--surface2);position:relative;overflow:hidden;}
+    .cg-img{width:100%;height:100%;object-fit:cover;display:block;}
+    .cg-img-fallback{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:2.4rem;}
+    .cg-body{padding:9px 10px;}
+    .cg-badge{display:inline-block;font-size:.58rem;font-weight:700;padding:2px 6px;border-radius:5px;background:rgba(16,185,129,.15);color:var(--green);margin-bottom:4px;text-transform:uppercase;letter-spacing:.04em;}
+    .cg-vendor{display:inline-flex;align-items:center;gap:3px;font-size:.62rem;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:5px;}
+    .cg-vendor.azteca{background:rgba(255,107,0,.12);color:#FF7B00;border:1px solid rgba(255,107,0,.2);}
+    .cg-vendor.shopping{background:rgba(59,130,246,.1);color:#5B9FE8;border:1px solid rgba(59,130,246,.2);}
+    .cg-name{font-size:.78rem;font-weight:700;margin:0 0 3px;line-height:1.3;}
+    .cg-price{font-size:.9rem;font-weight:700;color:var(--accent);margin:0 0 5px;}
+    .cg-months{font-size:.7rem;color:var(--text2);display:flex;align-items:center;gap:3px;}
+    .cg-msi{font-size:.67rem;color:var(--text2);margin-top:2px;opacity:.8;}
     .ob-sim-badge{font-size:.73rem;color:var(--text2);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:6px 12px;margin-bottom:14px;text-align:center;}
     .streak-card{background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(245,158,11,.15));border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;}
     .streak-fire{font-size:1.5rem;}
@@ -3498,23 +3499,41 @@
   // CATALOG
   // ════════════════════════════════════════════════════════════
   const CATALOGO = [
-    { id:'moto', nombre:'Moto Italika AT200', cat:'Transporte', precio:28999,
-      img:'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400&q=80', emoji:'🏍️', badge:'Más popular', msi:18 },
-    { id:'laptop', nombre:'Laptop HP 15.6" i5', cat:'Tecnología', precio:12499,
-      img:'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80', emoji:'💻', msi:12 },
-    { id:'samsung', nombre:'Samsung Galaxy A55', cat:'Celular', precio:9499,
-      img:'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&q=80', emoji:'📱', msi:12 },
-    { id:'switch', nombre:'Nintendo Switch OLED', cat:'Gaming', precio:8999,
-      img:'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400&q=80', emoji:'🎮', badge:'Nuevo' },
-    { id:'tv', nombre:'Smart TV TCL 55"', cat:'Hogar', precio:8499,
-      img:'https://images.unsplash.com/photo-1593359677879-a4bb92f4834f?w=400&q=80', emoji:'📺', msi:18 },
-    { id:'ipad', nombre:'iPad Air 11"', cat:'Tecnología', precio:15999,
-      img:'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&q=80', emoji:'📱', msi:18 },
-    { id:'sofa', nombre:'Sofá cama Milano 3 pzas', cat:'Hogar', precio:5999,
-      img:'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80', emoji:'🛋️', msi:12 },
-    { id:'bici', nombre:'Bicicleta MTB Benotto R26', cat:'Deporte', precio:4899,
-      img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80', emoji:'🚲' },
+    { id:'moto',     nombre:'Moto Italika AT200',       precio:28999, emoji:'🏍️', badge:'Más popular', msi:18, vendedor:'azteca',
+      img:'https://images.unsplash.com/photo-1558981403-c5f9899a28bc?w=400&q=80' },
+    { id:'laptop',   nombre:'Laptop HP 15.6" i5',       precio:12499, emoji:'💻', msi:12, vendedor:'shopping',
+      img:'https://images.unsplash.com/photo-1496181133206-80ce9b88a853?w=400&q=80' },
+    { id:'samsung',  nombre:'Samsung Galaxy A55',        precio:9499,  emoji:'📱', msi:12, vendedor:'azteca',
+      img:'https://images.unsplash.com/photo-1511707171634-5f897ff02aa9?w=400&q=80' },
+    { id:'switch',   nombre:'Nintendo Switch OLED',      precio:8999,  emoji:'🎮', badge:'Nuevo', vendedor:'shopping',
+      img:'https://images.unsplash.com/photo-1606144042614-b2417e99c4e3?w=400&q=80' },
+    { id:'tv',       nombre:'Smart TV TCL 55"',          precio:8499,  emoji:'📺', msi:18, vendedor:'azteca',
+      img:'https://images.unsplash.com/photo-1571415060716-baff7c736c48?w=400&q=80' },
+    { id:'ipad',     nombre:'iPad Air 11"',              precio:15999, emoji:'📱', msi:18, vendedor:'shopping',
+      img:'https://images.unsplash.com/photo-1544244015-0df4b3ffc6b0?w=400&q=80' },
+    { id:'sofa',     nombre:'Sofá cama Milano 3 pzas',   precio:5999,  emoji:'🛋️', msi:12, vendedor:'shopping',
+      img:'https://images.unsplash.com/photo-1555041469-a586c61ea9bc?w=400&q=80' },
+    { id:'bici',     nombre:'Bicicleta MTB Benotto R26', precio:4899,  emoji:'🚲', vendedor:'azteca',
+      img:'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&q=80' },
+    { id:'ps5',      nombre:'PlayStation 5 Slim',        precio:13999, emoji:'🕹️', vendedor:'shopping',
+      img:'https://images.unsplash.com/photo-1606813907291-d86efa9b94db?w=400&q=80' },
+    { id:'refri',    nombre:'Refrigerador Mabe 14 pies', precio:9299,  emoji:'🧊', msi:18, vendedor:'azteca',
+      img:'https://images.unsplash.com/photo-1584568694244-14fbdf83bd30?w=400&q=80' },
+    { id:'lavadora', nombre:'Lavadora Mabe 17 kg',       precio:7999,  emoji:'🫧', msi:12, vendedor:'azteca',
+      img:'https://images.unsplash.com/photo-1626806787461-102c1bfaaea1?w=400&q=80' },
+    { id:'airpods',  nombre:'AirPods Pro 2a gen',        precio:5499,  emoji:'🎧', vendedor:'shopping',
+      img:'https://images.unsplash.com/photo-1603351154351-5e2d0600bb77?w=400&q=80' },
+    { id:'monitor',  nombre:'Monitor LG 27" QHD',        precio:6499,  emoji:'🖥️', msi:12, vendedor:'shopping',
+      img:'https://images.unsplash.com/photo-1527443224154-c4a3942d3acf?w=400&q=80' },
+    { id:'estufa',   nombre:'Estufa Mabe 4 quemadores',  precio:4999,  emoji:'🔥', msi:12, vendedor:'azteca',
+      img:'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?w=400&q=80' },
   ];
+
+  function cgVendorBadge(v) {
+    if (v === 'azteca')   return '<div class="cg-vendor azteca">&#x1F3E6; Banco Azteca</div>';
+    if (v === 'shopping') return '<div class="cg-vendor shopping">&#x1F6CD; Shopping M\u00E1s</div>';
+    return '';
+  }
 
   function renderCatalogPanel() {
     const panel = document.getElementById('catalog-panel');
@@ -3523,34 +3542,35 @@
     const ahorro = Math.round(ingreso * 0.20);
 
     const infoBar = ingreso > 0
-      ? `<div class="cat-info-bar">Con tu ingreso de <strong>$${ingreso.toLocaleString('es-MX')}</strong>/mes, ahorrando el 20% serían <strong>$${ahorro.toLocaleString('es-MX')}/mes</strong> para tus metas.</div>`
-      : `<div class="cat-info-bar">Registra tu ingreso en el chat para ver cuánto tiempo necesitas ahorrar para cada producto.</div>`;
+      ? '<div class="cg-info-bar">Con tu ingreso de <strong>$' + ingreso.toLocaleString('es-MX') + '</strong>/mes, ahorrando el 20% son <strong>$' + ahorro.toLocaleString('es-MX') + '/mes</strong> para tus metas.</div>'
+      : '<div class="cg-info-bar">Registra tu ingreso en el chat para ver en cu\u00E1ntos meses podr\u00EDas tener cada producto.</div>';
 
-    const cards = CATALOGO.map(p => {
+    const cards = CATALOGO.map(function(p) {
       const meses = ahorro > 0 ? Math.ceil(p.precio / ahorro) : null;
       const msiPago = p.msi ? Math.ceil(p.precio / p.msi) : null;
-      return `<div class="cat-card">
-        <div class="cat-img-wrap">
-          <img class="cat-img" src="${p.img}" alt="${p.nombre}" loading="lazy"
-            onerror="this.parentElement.innerHTML='<span class=\\'cat-img-fallback\\'>${p.emoji}</span>'">
-        </div>
-        <div class="cat-body">
-          ${p.badge ? `<div class="cat-badge">${p.badge}</div>` : ''}
-          <div class="cat-name">${p.nombre}</div>
-          <div class="cat-price">$${p.precio.toLocaleString('es-MX')}</div>
-          ${meses ? `<div class="cat-months">🕐 ${meses} mes${meses!==1?'es':''} ahorrando</div>` : ''}
-          ${msiPago ? `<div class="cat-msi">O $${msiPago.toLocaleString('es-MX')}/mes a ${p.msi} MSI</div>` : ''}
-        </div>
-      </div>`;
+      const badgeHtml  = p.badge ? '<div class="cg-badge">' + p.badge + '</div>' : '';
+      const mesesHtml  = meses   ? '<div class="cg-months">\u{1F550} ' + meses + ' mes' + (meses !== 1 ? 'es' : '') + ' ahorrando</div>' : '';
+      const msiHtml    = msiPago ? '<div class="cg-msi">O $' + msiPago.toLocaleString('es-MX') + '/mes a ' + p.msi + ' MSI</div>' : '';
+      return '<div class="cg-card">' +
+        '<div class="cg-img-wrap">' +
+          '<img class="cg-img" src="' + p.img + '" alt="' + p.nombre.replace(/"/g,'&quot;') + '" loading="lazy" ' +
+            'onerror="this.style.display=\'none\';this.nextElementSibling.style.display=\'flex\'">' +
+          '<span class="cg-img-fallback" style="display:none">' + p.emoji + '</span>' +
+        '</div>' +
+        '<div class="cg-body">' +
+          cgVendorBadge(p.vendedor) +
+          badgeHtml +
+          '<div class="cg-name">' + p.nombre + '</div>' +
+          '<div class="cg-price">$' + p.precio.toLocaleString('es-MX') + '</div>' +
+          mesesHtml + msiHtml +
+        '</div>' +
+      '</div>';
     }).join('');
 
-    panel.innerHTML = `
-      <div class="cat-header">
-        <h2>🛒 Catálogo</h2>
-        <p>Banco Azteca · Shopping Más — Simulador de compras</p>
-      </div>
-      ${infoBar}
-      <div class="cat-grid">${cards}</div>`;
+    panel.innerHTML =
+      '<div class="cg-header"><h2>\uD83D\uDED2 Cat\u00E1logo</h2><p>Banco Azteca &amp; Shopping M\u00E1s &mdash; Simulador</p></div>' +
+      infoBar +
+      '<div class="cg-grid">' + cards + '</div>';
   }
 
   function storeAction(type, id) {
