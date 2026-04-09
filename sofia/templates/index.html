@@ -430,6 +430,9 @@
     .cg-bank-label{display:inline-flex;align-items:center;gap:4px;font-size:.63rem;font-weight:700;padding:2px 8px;border-radius:10px;margin-bottom:5px;text-transform:uppercase;letter-spacing:.04em;}
     .cg-bank-label.ok{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.25);}
     .cg-bank-label.risk{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
+    .cg-microcopy{font-size:.6rem;color:var(--text2);opacity:.65;margin-top:3px;text-align:center;font-style:italic;}
+    .cg-eval-btn.riesgo{background:transparent;color:var(--red);border:1.5px solid rgba(239,68,68,.45);}
+    .cg-eval-btn.riesgo:hover{background:rgba(239,68,68,.08);}
     .ob-sim-badge{font-size:.73rem;color:var(--text2);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:6px 12px;margin-bottom:14px;text-align:center;}
     .streak-card{background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(245,158,11,.15));border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;}
     .streak-fire{font-size:1.5rem;}
@@ -3641,7 +3644,8 @@
           '<div class="cg-rec ' + imp.cls + '">' + imp.semaforo + ' ' + imp.rec + '</div>' +
           statsHtml +
           msiHtml +
-          '<button class="cg-eval-btn" onclick="cgEvaluar(\'' + safeNombre + '\',' + p.precio + ')">Evaluar compra</button>' +
+          '<button class="cg-eval-btn' + (imp.cls === 'rojo' ? ' riesgo' : '') + '" onclick="cgEvaluar(\'' + safeNombre + '\',' + p.precio + ')">' + (imp.cls === 'rojo' ? '\u26A0\uFE0F ' : '') + 'Evaluar compra</button>' +
+          '<div class="cg-microcopy">Recomendaci\u00F3n basada en tu perfil financiero actual &middot; Simulaci\u00F3n educativa &mdash; no es una oferta de cr\u00E9dito</div>' +
         '</div>' +
       '</div>';
     }).join('');
