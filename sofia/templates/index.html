@@ -318,6 +318,7 @@
     /* ── Folder-style stacked tabs (main area) ── */
     .folder-tabs{display:flex;padding:0 12px;position:relative;flex-shrink:0;background:rgba(8,11,18,.85);backdrop-filter:blur(16px);border-bottom:1px solid var(--border);}
     .folder-tab{padding:10px 14px 8px;font-size:.72rem;font-weight:700;letter-spacing:.03em;color:var(--text2);background:var(--surface2);border:1px solid var(--border);border-bottom:none;border-radius:12px 12px 0 0;cursor:pointer;position:relative;transition:all .28s cubic-bezier(.4,0,.2,1);transform:translateY(4px);margin-right:-6px;white-space:nowrap;opacity:1;}
+    @media(max-width:400px){.folder-tab{padding:9px 9px 7px;font-size:.65rem;}.folder-tab .tab-icon{margin-right:3px;}}
     .folder-tab:hover{transform:translateY(2px);color:var(--text);background:var(--surface2);}
     .folder-tab.active{background:linear-gradient(135deg,rgba(16,185,129,.15),rgba(59,130,246,.22));color:var(--accent);border-color:rgba(59,130,246,.35);transform:translateY(0);z-index:10!important;box-shadow:0 -3px 12px rgba(59,130,246,.18);}
     .folder-tab .tab-icon{margin-right:5px;}
@@ -362,7 +363,9 @@
     body.theme-light #input{background:rgba(0,0,0,.07);border-color:rgba(0,0,0,.15);color:var(--text);}
     body.theme-light .modal-input,body.theme-light .ob-input,body.theme-light .ob-amount-input{background:rgba(0,0,0,.06)!important;border-color:rgba(0,0,0,.15)!important;color:var(--text)!important;}
     /* Header streak badge */
-    .header-streak{display:flex;align-items:center;gap:4px;margin-left:auto;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:20px;padding:4px 10px;cursor:pointer;}
+    .header-store-btn{background:none;border:none;font-size:1.1rem;cursor:pointer;padding:4px 6px;border-radius:8px;margin-left:auto;transition:.15s;line-height:1;}
+    .header-store-btn:hover{background:var(--surface);}
+    .header-streak{display:flex;align-items:center;gap:4px;background:rgba(251,191,36,.12);border:1px solid rgba(251,191,36,.3);border-radius:20px;padding:4px 10px;cursor:pointer;}
     .header-streak-icon{font-size:.95rem;line-height:1;}
     .header-streak-count{font-size:.75rem;font-weight:800;color:#fbbf24;}
     body.theme-blue{--bg:#0c1929;--surface:rgba(59,130,246,.08);--surface2:rgba(59,130,246,.12);--border:rgba(59,130,246,.2);}
@@ -966,6 +969,7 @@
       <h1>ALD<span>.IA</span></h1>
       <p id="chat-email-label">En linea</p>
     </div>
+    <button class="header-store-btn" onclick="switchMainTab('store')" title="Tienda">🛍️</button>
     <div class="header-streak" id="header-streak" onclick="switchMainTab('learn')" title="Ver racha">
       <span class="header-streak-icon">🔥</span>
       <span class="header-streak-count" id="header-streak-count">0</span>
@@ -982,7 +986,6 @@
     <div class="folder-tab" data-tab="catalog" style="z-index:4" onclick="switchMainTab('catalog')"><span class="tab-icon">🛒</span><span class="t-catalog">Catálogo</span></div>
     <div class="folder-tab" data-tab="panel" style="z-index:3" onclick="switchMainTab('panel')"><span class="tab-icon">📊</span><span class="t-dashboard">Dashboard</span></div>
     <div class="folder-tab" data-tab="learn" style="z-index:2" onclick="switchMainTab('learn')"><span class="tab-icon">🎮</span><span class="t-learn">Aprende</span></div>
-    <div class="folder-tab" data-tab="store" style="z-index:1" onclick="switchMainTab('store')"><span class="tab-icon">🛍️</span><span class="t-store">Tienda</span></div>
   </div>
   <div class="eval-strip" id="eval-strip">
     <div style="font-size:.8rem;line-height:1.35"><strong style="color:var(--text)">💸 ¿Me alcanza?</strong><br><span style="color:var(--text2);font-size:.72rem">Evalúa antes de gastar</span></div>
@@ -2660,7 +2663,7 @@
   }
 
   function switchMainTab(tabName) {
-    const ORDER = ['chat','catalog','panel','learn','store'];
+    const ORDER = ['chat','catalog','panel','learn'];
     document.querySelectorAll('.folder-tab').forEach(t => {
       const active = t.dataset.tab === tabName;
       t.classList.toggle('active', active);
