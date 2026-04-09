@@ -431,8 +431,18 @@
     .cg-bank-label.ok{background:rgba(16,185,129,.12);color:var(--green);border:1px solid rgba(16,185,129,.25);}
     .cg-bank-label.risk{background:rgba(239,68,68,.1);color:var(--red);border:1px solid rgba(239,68,68,.2);}
     .cg-microcopy{font-size:.6rem;color:var(--text2);opacity:.65;margin-top:3px;text-align:center;font-style:italic;}
-    .cg-eval-btn.riesgo{background:transparent;color:var(--red);border:1.5px solid rgba(239,68,68,.45);}
-    .cg-eval-btn.riesgo:hover{background:rgba(239,68,68,.08);}
+    .cg-eval-btn{width:100%;margin-top:8px;padding:7px 0;background:rgba(59,130,246,.12);color:var(--accent);border:1px solid rgba(59,130,246,.28);border-radius:8px;font-size:.75rem;font-weight:700;cursor:pointer;letter-spacing:.02em;transition:.15s;}
+    .cg-eval-btn:hover{background:rgba(59,130,246,.22);}
+    #cg-detail-overlay{position:fixed;inset:0;z-index:200;background:rgba(0,0,0,.55);display:none;align-items:flex-end;justify-content:center;}
+    #cg-detail-sheet{background:var(--bg);border:1px solid var(--border);width:100%;max-width:520px;max-height:84vh;overflow-y:auto;border-radius:20px 20px 0 0;padding:20px 18px 36px;position:relative;}
+    .cg-ds-close{position:absolute;top:12px;right:14px;background:none;border:none;color:var(--text2);font-size:1rem;cursor:pointer;padding:4px 8px;border-radius:6px;}
+    .cg-ds-img{width:100%;max-height:180px;object-fit:cover;border-radius:12px;margin-bottom:12px;}
+    .cg-ds-price{font-size:1.3rem;font-weight:800;color:var(--accent);margin-bottom:4px;}
+    .cg-ds-section{margin:10px 0;padding:10px 12px;background:var(--surface);border-radius:10px;border:1px solid var(--border);}
+    .cg-ds-lbl{font-size:.62rem;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text2);margin-bottom:6px;}
+    .cg-ds-stat{font-size:.82rem;display:flex;align-items:center;gap:6px;padding:3px 0;color:var(--text);}
+    .cg-ds-cta{width:100%;padding:11px;background:var(--accent);color:#fff;border:none;border-radius:10px;font-size:.85rem;font-weight:700;cursor:pointer;margin-top:14px;letter-spacing:.02em;}
+    .cg-ds-cta.riesgo{background:transparent;color:var(--red);border:1.5px solid rgba(239,68,68,.4);}
     .ob-sim-badge{font-size:.73rem;color:var(--text2);background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.2);border-radius:8px;padding:6px 12px;margin-bottom:14px;text-align:center;}
     .streak-card{background:linear-gradient(135deg,rgba(251,191,36,.1),rgba(245,158,11,.15));border:1px solid rgba(251,191,36,.25);border-radius:12px;padding:12px 16px;display:flex;align-items:center;gap:12px;}
     .streak-fire{font-size:1.5rem;}
@@ -1055,6 +1065,14 @@
 
   <!-- Catalog Panel -->
   <div class="catalog-panel" id="catalog-panel"></div>
+
+  <!-- Catalog Detail Sheet -->
+  <div id="cg-detail-overlay" onclick="cgCloseDetail()">
+    <div id="cg-detail-sheet" onclick="event.stopPropagation()">
+      <button class="cg-ds-close" onclick="cgCloseDetail()">✕</button>
+      <div id="cg-detail-content"></div>
+    </div>
+  </div>
 
   <!-- Learn/Games Panel -->
   <div class="learn-panel" id="learn-panel">
@@ -3601,6 +3619,43 @@
     abrirModal();
   }
 
+  function cgShowDetail(idx) {
+    const p = CATALOGO[idx];
+    const imp = cgImpacto(p.precio);
+    const msiPago = p.msi ? Math.ceil(p.precio / p.msi) : null;
+
+    // Todos los stats en el detalle (sin filtrar por color)
+    var allStats = '';
+    if (imp.mesesLiquidar) allStats += '<div class="cg-ds-stat">&#x23F1; ' + imp.mesesLiquidar + ' meses para liquidarlo (ahorrando 20%)</div>';
+    if (imp.pctAhorro)     allStats += '<div class="cg-ds-stat">&#x1F4B8; Reducir\u00EDa tu ahorro mensual en ' + imp.pctAhorro + '%</div>';
+    if (imp.libre !== null && imp.libre >= 0) allStats += '<div class="cg-ds-stat">&#x1F4B0; Te quedar\u00EDan $' + imp.libre.toLocaleString('es-MX') + ' libres al mes</div>';
+    if (imp.libre !== null && imp.libre < 0)  allStats += '<div class="cg-ds-stat" style="color:var(--red)">&#x26A0;&#xFE0F; El pago mensual supera tu disponible actual</div>';
+    if (msiPago) allStats += '<div class="cg-ds-stat">&#x1F5D3;&#xFE0F; O $' + msiPago.toLocaleString('es-MX') + '/mes a ' + p.msi + ' MSI con Banco Azteca</div>';
+
+    document.getElementById('cg-detail-content').innerHTML =
+      '<div style="display:flex;align-items:center;gap:8px;margin-bottom:10px;flex-wrap:wrap">' +
+        cgVendorBadge(p.vendedor) +
+        (imp.bankLabel ? '<div class="cg-bank-label ' + imp.bankCls + '">' + imp.bankLabel + '</div>' : '') +
+      '</div>' +
+      '<img class="cg-ds-img" src="' + p.img + '" alt="' + p.nombre + '" onerror="this.style.display=\'none\'">' +
+      '<div style="font-size:1rem;font-weight:700;margin-bottom:2px">' + p.nombre + '</div>' +
+      '<div class="cg-ds-price">$' + p.precio.toLocaleString('es-MX') + '</div>' +
+      '<div class="cg-rec ' + imp.cls + '" style="margin:8px 0">' + imp.semaforo + ' ' + imp.rec + '</div>' +
+      (allStats ? '<div class="cg-ds-section"><div class="cg-ds-lbl">An\u00E1lisis financiero</div>' + allStats + '</div>' : '') +
+      '<button class="cg-ds-cta' + (imp.cls === 'rojo' ? ' riesgo' : '') + '" onclick="cgCloseDetail();cgEvaluar(CATALOGO[' + idx + '].nombre,CATALOGO[' + idx + '].precio)">' +
+        (imp.cls === 'rojo' ? '\u26A0\uFE0F ' : '') + 'An\u00E1lisis completo con \u00BFMe alcanza?' +
+      '</button>' +
+      '<div class="cg-microcopy" style="margin-top:10px">Simulaci\u00F3n educativa \u2014 no es una oferta de cr\u00E9dito</div>';
+
+    document.getElementById('cg-detail-overlay').style.display = 'flex';
+    document.body.style.overflow = 'hidden';
+  }
+
+  function cgCloseDetail() {
+    document.getElementById('cg-detail-overlay').style.display = 'none';
+    document.body.style.overflow = '';
+  }
+
   function renderCatalogPanel() {
     const panel = document.getElementById('catalog-panel');
     if (!panel) return;
@@ -3611,10 +3666,9 @@
       ? '<div class="cg-info-bar">Explora productos y eval\u00FAa c\u00F3mo comprarlos seg\u00FAn tu situaci\u00F3n financiera actual.</div>'
       : '<div class="cg-info-bar">Registra tu ingreso en el chat para ver el impacto financiero de cada producto.</div>';
 
-    const cards = CATALOGO.map(function(p) {
+    const cards = CATALOGO.map(function(p, idx) {
       const imp = cgImpacto(p.precio);
       const msiPago = p.msi ? Math.ceil(p.precio / p.msi) : null;
-      const safeNombre = p.nombre.replace(/'/g, "\\'");
 
       const badgeHtml = p.badge ? '<div class="cg-badge">' + p.badge + '</div>' : '';
       const bankHtml  = imp.bankLabel ? '<div class="cg-bank-label ' + imp.bankCls + '">' + imp.bankLabel + '</div>' : '';
@@ -3653,8 +3707,8 @@
           '<div class="cg-rec ' + imp.cls + '">' + imp.semaforo + ' ' + imp.rec + '</div>' +
           statsHtml +
           msiHtml +
-          '<button class="cg-eval-btn' + (imp.cls === 'rojo' ? ' riesgo' : '') + '" onclick="cgEvaluar(\'' + safeNombre + '\',' + p.precio + ')">' + (imp.cls === 'rojo' ? '\u26A0\uFE0F ' : '') + 'Evaluar compra</button>' +
-          '<div class="cg-microcopy">Recomendaci\u00F3n basada en tu perfil financiero actual &middot; Simulaci\u00F3n educativa &mdash; no es una oferta de cr\u00E9dito</div>' +
+          '<button class="cg-eval-btn" onclick="cgShowDetail(' + idx + ')">Ver an\u00E1lisis completo \u2192</button>' +
+          '<div class="cg-microcopy">Recomendaci\u00F3n basada en tu perfil financiero actual</div>' +
         '</div>' +
       '</div>';
     }).join('');
